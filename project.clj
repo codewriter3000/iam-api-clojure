@@ -13,7 +13,10 @@
                  [org.clojure/tools.logging "1.3.0"]
                  [metosin/ring-http-response "0.9.4"]
                  [ring/ring-json "0.5.1"]
-                 [metosin/ring-http-response "0.9.4"]]
+                 [metosin/ring-http-response "0.9.4"]
+                 [metosin/ring-swagger "1.0.0"]
+                 [org.apache.logging.log4j/log4j-api "2.12.4"]
+                 [org.apache.logging.log4j/log4j-core "2.12.4"]]
   :plugins [[lein-ring "0.12.5"]
             [lein-environ "1.2.0"]]
   :ring {:handler iam-clj-api.handler/app

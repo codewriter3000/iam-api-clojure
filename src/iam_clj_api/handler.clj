@@ -8,7 +8,8 @@
             [iam-clj-api.permission.view :as permission-view]
             [iam-clj-api.role.view :as role-view]
             [env :as env]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [ring.swagger.swagger2 :as rs]))
 
 (defn wrap-no-anti-forgery [handler]
   (wrap-defaults handler (assoc-in site-defaults [:security :anti-forgery] false)))
@@ -28,6 +29,7 @@
 (def app-routes
   (routes
    (wrap-no-anti-forgery (GET "/" [] "API is running"))
+  (rs/swagger-ui "/swagger-ui" :swagger-docs "/swagger-docs")
    (wrap-no-anti-forgery user-view/user-view-routes)
    (wrap-no-anti-forgery permission-view/permission-view-routes)
    (wrap-no-anti-forgery role-view/role-view-routes)

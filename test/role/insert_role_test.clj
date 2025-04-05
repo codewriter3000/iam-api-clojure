@@ -14,16 +14,16 @@
 (deftest test-insert-role
     (testing "Insert role"
         (is (= {:status 201 :body "Role created successfully"}
-               (controller/insert-role "role1" "description1")))
+               (controller/insert-role {:name "role1" :description "description1"})))
         (is (= {:status 201 :body "Role created successfully"}
-               (controller/insert-role "role2" "description2")))
+               (controller/insert-role {:name "role2" :description "description2"})))
         (is (= {:status 201 :body "Role created successfully"}
-               (controller/insert-role "role3" "description3")))
+               (controller/insert-role {:name "role3" :description "description3"})))
         (is (= {:status 201 :body "Role created successfully"}
-               (controller/insert-role "role4" "description4"))))
+               (controller/insert-role {:name "role4" :description "description4"})))
     (testing "Insert role with missing description"
         (is (= {:status 201 :body "Role created successfully"}
-               (controller/insert-role "role5" ""))))
+               (controller/insert-role {:name "role5" :description ""}))))
     (testing "Inserting role with duplicate name"
         (is (= {:status 400 :error "Role with name role1 already exists"}
-               (controller/insert-role "role1" "")))))
+               (controller/insert-role {:name "role1" :description "description1"}))))))

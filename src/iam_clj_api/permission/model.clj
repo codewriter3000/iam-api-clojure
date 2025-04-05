@@ -1,80 +1,121 @@
 (ns iam-clj-api.permission.model
   (:require [next.jdbc :as jdbc]
-            [lib.core :refer :all]))
+            [lib.core :refer :all]
+            [clojure.tools.logging :as log]
+            [clojure.walk :as walk]))
 
 (def ds (get-datasource))
 
+;; Helper function to log queries
+(defn- log-query [query params]
+  (log/info "Executing query:" query "with params:" params))
+
+(defn- log-result [result]
+  (log/info "Query result:" result))
+
+;; Create the permissions table
 (defn create-permission-table []
   (jdbc/execute! ds
-                 ["CREATE TABLE IF NOT EXISTS permissions (id SERIAL PRIMARY KEY,
-      name VARCHAR(128) NOT NULL,
-      description VARCHAR(1000)
-      );
+                 ["CREATE TABLE IF NOT EXISTS permissions (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(128) NOT NULL,
+                    description VARCHAR(1000)
+                  );
 
-                   CREATE TABLE IF NOT EXISTS users_permissions (user_id INT NOT NULL,
-      permission_id INT NOT NULL
-      );"]))
+                   CREATE TABLE IF NOT EXISTS users_permissions (
+                    user_id INT NOT NULL,
+                    permission_id INT NOT NULL
+                  );"]))
 
+;; Drop the permissions table
 (defn drop-permission-table []
   (jdbc/execute! ds ["DROP TABLE IF EXISTS permissions; DROP TABLE IF EXISTS users_permissions;"]))
 
+;; Insert a new permission
 (defn insert-permission [permission]
-    (jdbc/execute! ds
-                     ["INSERT INTO permissions (name, description)
-            VALUES (?, ?);"
-                    (get permission :name) (get permission :description)]))
+  (let [query "INSERT INTO permissions (name, description) VALUES (?, ?);"
+        params [(get permission :name) (get permission :description)]]
+    (log-query query params)
+    (jdbc/execute! ds (into [query] params))))
 
+;; Get all permissions
 (defn get-all-permissions []
-  (let [result (jdbc/execute! ds
-                              ["SELECT id, name, description FROM permissions;"])]
+  (let [query "SELECT id, name, description FROM permissions;"
+        result (jdbc/execute! ds [query])]
+    (log-query query [])
     (if (empty? result)
       nil
-      (map remove-namespace (map #(into {} %) result)))))
+      (map #(into {} %) result))))
 
+;; Get a permission by ID
 (defn get-permission-by-id [id]
-    (let [result (jdbc/execute! ds
-                                ["SELECT id, name, description FROM permissions WHERE id = ?;" id])]
-        (remove-namespace (first result))))
+  (let [query "SELECT id, name, description FROM permissions WHERE id = ?;"
+        params [id]
+        result (jdbc/execute! ds (into [query] params))]
+    (log-query query params)
+    (if (empty? result)
+      nil
+      (remove-namespace (first result)))))
 
+;; Get a permission by name
 (defn get-permission-by-name [name]
-    (let [result (jdbc/execute! ds
-                                ["SELECT id, name, description FROM permissions WHERE name = ?;" name])]
-        (remove-namespace (first result))))
+  (let [query "SELECT id, name, description FROM permissions WHERE name = ?;"
+        params [name]
+        result (jdbc/execute! ds (into [query] params))]
+    (log-query query params)
+    (if (empty? result)
+      nil
+      (remove-namespace (first result)))))
 
+;; Update a permission's name
 (defn update-permission-name [id new-name]
-    (let [result (jdbc/execute! ds
-                                ["UPDATE permissions SET name = ? WHERE id = ?;"
-                                 new-name id])]
-        {:update-count (:next.jdbc/update-count (first result))}))
+  (let [query "UPDATE permissions SET name = ? WHERE id = ?;"
+        params [new-name id]
+        result (jdbc/execute! ds (into [query] params))]
+    (log-query query params)
+    {:update-count (:next.jdbc/update-count (first result))}))
 
+;; Update a permission's description
 (defn update-permission-description [id new-description]
-    (let [result (jdbc/execute! ds
-                                ["UPDATE permissions SET description = ? WHERE id = ?;"
-                                 new-description id])]
-        {:update-count (:next.jdbc/update-count (first result))}))
+  (let [query "UPDATE permissions SET description = ? WHERE id = ?;"
+        params [new-description id]
+        result (jdbc/execute! ds (into [query] params))]
+    (log-query query params)
+    {:update-count (:next.jdbc/update-count (first result))}))
 
+;; Delete a permission
 (defn delete-permission [id]
-    (let [result (jdbc/execute! ds
-                                ["DELETE FROM permissions WHERE id = ?;" id])]
-        {:update-count (:next.jdbc/update-count (first result))}))
+  (let [query "DELETE FROM permissions WHERE id = ?;"
+        params [id]
+        result (jdbc/execute! ds (into [query] params))]
+    (log-query query params)
+    {:delete-count (:next.jdbc/update-count (first result))}))
 
+;; Get users with a specific permission
 (defn get-users-with-permission [id]
-    (let [result (jdbc/execute! ds
-                                ["SELECT u.id, u.username, u.email
-            FROM users u
-            JOIN users_permissions up ON u.id = up.user_id
-            WHERE up.permission_id = ?;" id])]
-      (if (not (some? result))
-        nil
-        (map remove-namespace (map #(into {} %) result)))))
+  (let [query "SELECT u.id, u.username, u.email
+               FROM users u
+               JOIN users_permissions up ON u.id = up.user_id
+               WHERE up.permission_id = ?;"
+        params [id]
+        result (jdbc/execute! ds (into [query] params))]
+    (log-query query params)
+    (log-result result)
+    (if (empty? result)
+      nil
+      ; TODO: This is an array of values with namespaces. Take the namespaces out.
+      (map #(into {} %) result))))
 
+;; Add a permission to a user
 (defn add-permission-to-user [id user-id]
-    (jdbc/execute! ds
-                     ["INSERT INTO users_permissions (user_id, permission_id)
-            VALUES (?, ?);"
-                    user-id id]))
+  (let [query "INSERT INTO users_permissions (user_id, permission_id) VALUES (?, ?);"
+        params [user-id id]]
+    (log-query query params)
+    (jdbc/execute! ds (into [query] params))))
 
+;; Remove a permission from a user
 (defn remove-permission-from-user [id user-id]
-    (jdbc/execute! ds
-                     ["DELETE FROM users_permissions WHERE user_id = ? AND permission_id = ?;"
-                    user-id id]))
+  (let [query "DELETE FROM users_permissions WHERE user_id = ? AND permission_id = ?;"
+        params [user-id id]]
+    (log-query query params)
+    (jdbc/execute! ds (into [query] params))))
