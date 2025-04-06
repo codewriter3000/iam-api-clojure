@@ -55,7 +55,7 @@
         params [(Integer/parseInt id)]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
-    (first result)))
+    (remove-namespace (first result))))
 
 ;; Get a user by username
 (defn get-user-by-username [username]

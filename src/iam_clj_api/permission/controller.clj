@@ -50,7 +50,7 @@
         (if (= 1 (:update-count result))
           {:status 200 :body "Permission name updated"}
           {:status 400 :error "Failed to update permission name"})))
-    {:status 404 :error "Permission not found"}))
+    {:status 400 :error "Failed to update permission name"}))
 
 ;; Update a permission's description
 (defn update-permission-description [id new-description]
@@ -60,7 +60,7 @@
       (if (= 1 (:update-count result))
         {:status 200 :body "Permission description updated"}
         {:status 400 :error "Failed to update permission description"}))
-    {:status 404 :error "Permission not found"}))
+    {:status 400 :error "Failed to update permission description"}))
 
 ;; Delete a permission
 (defn delete-permission [id]
@@ -82,12 +82,12 @@
 ;; Add a permission to a user
 (defn add-permission-to-user [id user-id]
   (log/info "Adding permission ID:" id "to user ID:" user-id)
-  (if-let [permission (permission-exists? id)]
+  (if (permission-exists? id)
     (let [result (model/add-permission-to-user id user-id)]
       (if (= 1 (:insert-count result))
         {:status 200 :body "Permission added to user"}
         {:status 400 :error "Failed to add permission to user"}))
-    {:status 404 :error "Permission not found"}))
+    {:status 400 :error "Failed to add permission to user"}))
 
 ;; Remove a permission from a user
 (defn remove-permission-from-user [id user-id]
@@ -97,4 +97,4 @@
       (if (= 1 (:delete-count result))
         {:status 200 :body "Permission removed from user"}
         {:status 400 :error "Failed to remove permission from user"}))
-    {:status 404 :error "Permission not found"}))
+    {:status 400 :error "Failed to remove permission from user"}))

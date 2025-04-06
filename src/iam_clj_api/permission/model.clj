@@ -1,8 +1,7 @@
 (ns iam-clj-api.permission.model
   (:require [next.jdbc :as jdbc]
             [lib.core :refer :all]
-            [clojure.tools.logging :as log]
-            [clojure.walk :as walk]))
+            [clojure.tools.logging :as log]))
 
 (def ds (get-datasource))
 
@@ -45,7 +44,7 @@
     (log-query query [])
     (if (empty? result)
       nil
-      (map #(into {} %) result))))
+      (map remove-namespace (map #(into {} %) result)))))
 
 ;; Get a permission by ID
 (defn get-permission-by-id [id]
@@ -103,8 +102,7 @@
     (log-result result)
     (if (empty? result)
       nil
-      ; TODO: This is an array of values with namespaces. Take the namespaces out.
-      (map #(into {} %) result))))
+      (map remove-namespace (map #(into {} %) result)))))
 
 ;; Add a permission to a user
 (defn add-permission-to-user [id user-id]

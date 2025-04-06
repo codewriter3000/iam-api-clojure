@@ -61,88 +61,98 @@
 ;; Get a user by ID
 (defn get-user-by-id [id]
   (log/info "Fetching user by ID:" id)
-  (if-let [user (user-exists? id)]
-    (work 200 user)
-    user))
+  (let [user (user-exists? id)]
+    (if user
+      (work 200 user)
+      user)))
 
 ;; Update a user
 (defn update-user [id user]
   (log/info "Updating user with ID:" id "Data:" user)
-  (if-let [existing-user (user-exists? id)]
-    (let [result (model/update-user id user)]
-      (if (= 1 (:update-count result))
-        (success 200 "User updated successfully")
-        (error 400 "Failed to update user")))
-    existing-user))
+  (let [existing-user (user-exists? id)]
+    (if existing-user
+      (let [result (model/update-user id user)]
+        (if (= 1 (:update-count result))
+          (success 200 "User updated successfully")
+          (error 400 "Failed to update user")))
+      existing-user)))
 
 ;; Update a user's username
 (defn update-user-username [id new-username]
   (log/info "Updating username for user ID:" id)
-  (if-let [user (user-exists? id)]
-    (let [result (model/update-user id {:username new-username})]
-      (if (= 1 (:update-count result))
-        (success 200 "Username updated successfully")
-        (error 400 "Failed to update username")))
-    user))
+  (let [user (user-exists? id)]
+    (if user
+      (let [result (model/update-user id {:username new-username})]
+        (if (= 1 (:update-count result))
+          (success 200 "Username updated successfully")
+          (error 400 "Failed to update username")))
+      user)))
 
 ;; Update a user's email
 (defn update-user-email [id new-email]
   (log/info "Updating email for user ID:" id)
-  (if-let [user (user-exists? id)]
-    (let [result (model/update-user id {:email new-email})]
-      (if (= 1 (:update-count result))
-        (success 200 "Email updated successfully")
-        (error 400 "Failed to update email")))
-    user))
+  (let [user (user-exists? id)]
+    (if user
+      (let [result (model/update-user id {:email new-email})]
+        (if (= 1 (:update-count result))
+          (success 200 "Email updated successfully")
+          (error 400 "Failed to update email")))
+      user)))
 
 ;; Update a user's password
 (defn update-user-password [id new-password]
   (log/info "Updating password for user ID:" id)
-  (if-let [user (user-exists? id)]
-    (let [result (model/update-user-password id (hashers/derive new-password))]
-      (success 200 "Password updated successfully"))
-    user))
+  (let [user (user-exists? id)]
+    (if user
+      (let [result (model/update-user-password id (hashers/derive new-password))]
+        (success 200 "Password updated successfully"))
+      user)))
 
 ;; Delete a user
 (defn delete-user [id]
   (log/info "Deleting user with ID:" id)
-  (if-let [user (user-exists? id)]
-    (let [result (model/delete-user id)]
-      (if (= 1 (:delete-count result))
-        (success 200 "User deleted successfully")
-        (error 400 "Failed to delete user")))
-    user))
+  (let [user (user-exists? id)]
+    (if user
+      (let [result (model/delete-user id)]
+        (if (= 1 (:delete-count result))
+          (success 200 "User deleted successfully")
+          (error 400 "Failed to delete user")))
+      user)))
 
 ;; Get roles for a user
 (defn get-roles-for-user [id]
   (log/info "Fetching roles for user ID:" id)
-  (if-let [user (user-exists? id)]
-    (work 200 (model/get-roles-for-user id))
-    user))
+  (let [user (user-exists? id)]
+    (if user
+      (work 200 (model/get-roles-for-user id))
+      user)))
 
 ;; Add roles to a user
 (defn add-roles-to-user [id roles]
   (log/info "Adding roles to user ID:" id "Roles:" roles)
-  (if-let [user (user-exists? id)]
-    (let [results (map #(role-model/add-role-to-user % id) roles)
-          success-count (count (filter #(= 1 (:update-count %)) results))
-          failure-count (- (count roles) success-count)]
-      (success 200 {:success-count success-count :failure-count failure-count}))
-    user))
+  (let [user (user-exists? id)]
+    (if user
+      (let [results (map #(role-model/add-role-to-user % id) roles)
+            success-count (count (filter #(= 1 (:update-count %)) results))
+            failure-count (- (count roles) success-count)]
+        (success 200 {:success-count success-count :failure-count failure-count}))
+      user)))
 
 ;; Remove roles from a user
 (defn remove-roles-from-user [id roles]
   (log/info "Removing roles from user ID:" id "Roles:" roles)
-  (if-let [user (user-exists? id)]
-    (let [results (map #(role-model/remove-role-from-user id %) roles)
-          success-count (count (filter #(= 1 (:update-count %)) results))
-          failure-count (- (count roles) success-count)]
-      (success 200 {:success-count success-count :failure-count failure-count}))
-    user))
+  (let [user (user-exists? id)]
+    (if user
+      (let [results (map #(role-model/remove-role-from-user id %) roles)
+            success-count (count (filter #(= 1 (:update-count %)) results))
+            failure-count (- (count roles) success-count)]
+        (success 200 {:success-count success-count :failure-count failure-count}))
+      user)))
 
 ;; Get permissions for a user
 (defn get-permissions-for-user [id]
   (log/info "Fetching permissions for user ID:" id)
-  (if-let [user (user-exists? id)]
-    (work 200 (model/get-permissions-for-user id))
-    user))
+  (let [user (user-exists? id)]
+    (if user
+      (work 200 (model/get-permissions-for-user id))
+      user)))
