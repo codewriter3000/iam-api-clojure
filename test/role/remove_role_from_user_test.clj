@@ -24,19 +24,19 @@
       (is (= "admin" (get user :username)))
       (is (= 1 (count (user-model/get-roles-for-user (get user :id)))))
       (is (= {:status 200, :body "Role removed from user"}
-             (controller/remove-role-from-user (get user :id) (get role :id))))
+             (controller/remove-role-from-user (get role :id) (get user :id))))
       (is (= 0 (count (user-model/get-roles-for-user (get user :id))))))))
 
 (deftest test-remove-role-from-user-with-invalid-role-id []
     (testing "Remove role from user with invalid role id"
         (let [user (user-model/get-user-by-username "admin")]
         (is (= "admin" (get user :username)))
-        (is (= {:status 400, :error "Failed to remove role from user"}
-               (controller/remove-role-from-user (get user :id) 100))))))
+        (is (= {:status 404, :error "Role not found"}
+               (controller/remove-role-from-user 100 (get user :id)))))))
 
 (deftest test-remove-role-from-user-with-invalid-user-id []
     (testing "Remove role from user with invalid user id"
         (let [role (role-model/get-role-by-name "admin")]
         (is (= "admin" (get role :name)))
-        (is (= {:status 400, :error "Failed to remove role from user"}
-               (controller/remove-role-from-user 100 (get role :id)))))))
+        (is (= {:status 404, :error "User not found"}
+               (controller/remove-role-from-user (get role :id) 100))))))

@@ -1,7 +1,9 @@
 (ns user.insert-user-test
-  (:require [clojure.test :refer :all]
-            [iam-clj-api.user.controller :refer :all]
-            [iam-clj-api.user.model :as model]))
+  (:require
+   [clojure.test :refer :all]
+   [iam-clj-api.user.controller :refer :all]
+   [iam-clj-api.user.model :as model]
+   [lib.response :refer [error success]]))
 
 (defn mock-get-user-by-username [username]
   (if (= username "existinguser")
@@ -18,18 +20,22 @@
 
 (deftest test-insert-user
   (testing "Insertion of user"
-    (is (= {:status 201 :body "User created successfully"}
-           (insert-user "newuser" "newuser@example.com" "Password1!")))))
+    (is (= (success 201 "User created successfully")
+           (insert-user {:username "newuser" :email "newuser@example.com" :password "Password1!"})))))
 
 (deftest test-validate-input
   (testing "Validation of input"
-    (is (= {:status 400 :error "All fields are required"}
-           (validate-input "" "test@example.com" "Password1!")))
-    (is (= {:status 400 :error "Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character"}
-           (validate-input "username" "test@example.com" "password")))
-    (is (= {:status 400 :error "Username must be between 3 and 20 characters"}
-           (validate-input "ab" "test@example.com" "Password1!")))
-    (is (= {:status 400 :error "Invalid email address"}
-           (validate-input "username" "invalid-email" "Password1!")))
-    (is (= {:status 400 :error "Username already exists"}
-           (validate-input "existinguser" "test@example.com" "Password1!")))))
+    (is (= (error 400 "All fields are required")
+           (validate-input {:username "" :email "test@example.com" :password "Password1!"})))
+
+    (is (= (error 400 "Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character")
+           (validate-input {:username "username" :email "test@example.com" :password "password"})))
+
+    (is (= (error 400 "Username must be between 3 and 20 characters")
+           (validate-input {:username "ab" :email "test@example.com" :password "Password1!"})))
+
+    (is (= (error 400 "Email is invalid")
+           (validate-input {:username "username" :email "invalid-email" :password "Password1!"})))
+
+    (is (= (error 400 "Username already exists")
+           (validate-input {:username "existinguser" :email "test@example.com" :password "Password1!"})))))

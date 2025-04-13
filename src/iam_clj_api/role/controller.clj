@@ -10,21 +10,24 @@
   (let [role (model/get-role-by-id id)]
     (if role
       role
-      {:status 404 :error "Role not found"})))
+      nil)))
 
 ;; Helper function to check if a user exists
 (defn- user-exists? [id]
+  (log/info "Checking if user exists with ID:" id)
   (let [user (user-model/get-user-by-id id)]
     (if user
       user
-      {:status 404 :error "User not found"})))
+      (do
+        (log/warn "User not found with ID:" id)
+        nil))))
 
 ;; Helper function to check if a permission exists
 (defn- permission-exists? [id]
   (let [permission (perm-model/get-permission-by-id id)]
     (if permission
       permission
-      {:status 404 :error "Permission not found"})))
+      nil)))
 
 ;; Get all roles
 (defn get-all-roles []
@@ -34,7 +37,10 @@
 ;; Get a role by ID
 (defn get-role-by-id [id]
   (log/info "Fetching role by ID:" id)
-  (role-exists? id))
+  (let [role (role-exists? id)]
+    (if role
+      {:status 200 :body role}
+      {:status 404 :error "Role not found"})))
 
 ;; Get a role by name
 (defn get-role-by-name [name]
@@ -78,21 +84,24 @@
 ;; Update a role's name
 (defn update-role-name [id new-name]
   (log/info "Updating role name for ID:" id)
-  (if (role-exists? id)
-    (if (empty? new-name)
-      {:status 400 :error "Missing new name"}
-      (let [result (model/update-role id {:name new-name})]
-        (if (= 1 (:update-count result))
-          {:status 200 :body "Role name updated"}
-          {:status 400 :error "Failed to update role name"})))
-    {:status 404 :error "Role not found"}))
+  (let [role-result (role-exists? id)]
+    (log/info "Role result:" role-result)
+    (if (role-exists? id)
+      (if (empty? new-name)
+        {:status 400 :error "Missing new name"}
+        (let [result (model/update-role id {:name new-name})]
+          (if (= 1 (:next.jdbc/update-count (first result)))
+            {:status 200 :body "Role name updated"}
+            {:status 400 :error "Failed to update role name"})))
+      {:status 404 :error "Role not found"})))
 
 ;; Update a role's description
 (defn update-role-description [id new-description]
   (log/info "Updating role description for ID:" id)
   (if (role-exists? id)
     (let [result (model/update-role id {:description new-description})]
-      (if (= 1 (:update-count result))
+      (log/info "Result of updating role description:" result)
+      (if (= 1 (:next.jdbc/update-count (first result)))
         {:status 200 :body "Role description updated"}
         {:status 400 :error "Failed to update role description"}))
     {:status 404 :error "Role not found"}))
@@ -111,7 +120,11 @@
 (defn get-users-with-role [id]
   (log/info "Fetching users with role ID:" id)
   (if (role-exists? id)
-    {:status 200 :body (model/get-users-with-role id)}
+    (let [users (model/get-users-with-role id)]
+      (log/info "Users with role ID:" id "are:" users)
+      (if (nil? users)
+        {:status 404 :error "No users found with the given role"}
+        {:status 200 :body users}))
     {:status 404 :error "Role not found"}))
 
 ;; Add a role to a user
@@ -119,8 +132,10 @@
   (log/info "Adding role ID:" role-id "to user ID:" user-id)
   (if (role-exists? role-id)
     (if (user-exists? user-id)
-      (let [result (model/add-role-to-user role-id user-id)]
-        (if (= 1 (:update-count result))
+      (let [result (model/add-role-to-user role-id user-id)
+            update-count (:next.jdbc/update-count (first result))] ; Extract the update count
+        (log/info "Result of adding role to user:" result)
+        (if (= 1 update-count) ; Check the extracted update count
           {:status 200 :body "Role added to user"}
           {:status 400 :error "Failed to add role to user"}))
       {:status 404 :error "User not found"})
@@ -139,12 +154,16 @@
 ;; Remove a role from a user
 (defn remove-role-from-user [role-id user-id]
   (log/info "Removing role ID:" role-id "from user ID:" user-id)
-  (if (role-exists? role-id)
-    (let [result (model/remove-role-from-user role-id user-id)]
-      (if (= 1 (:update-count result))
-        {:status 200 :body "Role removed from user"}
-        {:status 400 :error "Failed to remove role from user"}))
-    {:status 404 :error "Role not found"}))
+  (if (user-exists? user-id) ; Check if the user exists first
+    (if (role-exists? role-id) ; Then check if the role exists
+      (let [result (model/remove-role-from-user role-id user-id)
+            update-count (:next.jdbc/update-count (first result))] ; Extract the update count
+        (log/info "Result of removing role from user:" result)
+        (if (= 1 update-count) ; Check the extracted update count
+          {:status 200 :body "Role removed from user"}
+          {:status 400 :error "Failed to remove role from user"}))
+      {:status 404 :error "Role not found"})
+    {:status 404 :error "User not found"})) ; Return user not found if the user doesn't exist
 
 ;; Remove a role from multiple users
 (defn remove-role-from-many-users [role-id user-ids]
@@ -164,23 +183,21 @@
     {:status 404 :error "Role not found"}))
 
 ;; Add a permission to a role
-(defn add-permission-to-role [permission-id role-id]
+(defn add-permission-to-role [role-id permission-id]
   (log/info "Adding permission ID:" permission-id "to role ID:" role-id)
-  (if (role-exists? role-id)
-    (if (permission-exists? permission-id)
-      (let [result (model/add-permission-to-role permission-id role-id)]
-        (if (= 1 (:update-count result))
-          {:status 200 :body "Permission added to role"}
-          {:status 400 :error "Failed to add permission to role"}))
-      {:status 404 :error "Permission not found"})
-    {:status 404 :error "Role not found"}))
+  (let [result (model/add-permission-to-role role-id permission-id)]
+    (if (= 1 (:insert-count result))
+      {:status 200 :body "Permission added to role"} ; Return success response
+      {:status 400 :error "Failed to add permission to role"}))) ; Return failure response
 
 ;; Remove a permission from a role
 (defn remove-permission-from-role [permission-id role-id]
   (log/info "Removing permission ID:" permission-id "from role ID:" role-id)
   (if (role-exists? role-id)
-    (let [result (model/remove-permission-from-role permission-id role-id)]
-      (if (= 1 (:update-count result))
+    (let [result (model/remove-permission-from-role role-id permission-id)
+          update-count (:next.jdbc/update-count (first result))] ; Extract the update count
+      (log/info "Result of removing permission from role:" result)
+      (if (= 1 update-count) ; Check the extracted update count
         {:status 200 :body "Permission removed from role"}
         {:status 400 :error "Failed to remove permission from role"}))
     {:status 404 :error "Role not found"}))

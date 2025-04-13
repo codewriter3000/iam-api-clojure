@@ -1,7 +1,8 @@
 (ns user.update-user-email-test
   (:require [clojure.test :refer :all]
             [iam-clj-api.user.controller :refer :all]
-            [iam-clj-api.user.model :as model]))
+            [iam-clj-api.user.model :as model]
+            [lib.response :refer [success]]))
 
 (defn setup [f]
     (model/drop-user-table)
@@ -14,4 +15,4 @@
 (deftest test-update-user-email
   (testing "Update user email"
     (let [result (update-user-email 1 "newemail@example.com")]
-      (is (= {:status 200 :body "Email updated"} result)))))
+      (is (= (success 200 "Email updated successfully") result)))))

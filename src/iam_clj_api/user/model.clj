@@ -43,19 +43,22 @@
     (jdbc/execute! ds (into [query] values))))
 
 ;; Get all users
+(defn get-user-by-id [id]
+  (let [query "SELECT id, username, email, first_name, last_name, created_at FROM users WHERE id = ?;"
+        params [(Integer. id)] ; Ensure id is passed as an Integer
+          result (jdbc/execute! ds (into [query] params))]
+            (log-query query params)
+            (log/info "Result:" result)
+            (if (empty? result)
+              nil
+              (remove-namespace (first result)))))
+
+;; filepath: c:\Users\alex.MICHARSKI\Workspace\iam-clj-api\src\iam_clj_api\user\model.clj
 (defn get-all-users []
-  (let [query "SELECT id, username, email, first_name, last_name FROM users;"
+  (let [query "SELECT id, username, email, first_name, last_name, created_at FROM users;"
         result (jdbc/execute! ds [query])]
     (log-query query [])
     (map remove-namespace (map #(into {} %) result))))
-
-;; Get a user by ID
-(defn get-user-by-id [id]
-  (let [query "SELECT id, username, email, first_name, last_name, created_at FROM users WHERE id = ?;"
-        params [(Integer/parseInt id)]
-        result (jdbc/execute! ds (into [query] params))]
-    (log-query query params)
-    (remove-namespace (first result))))
 
 ;; Get a user by username
 (defn get-user-by-username [username]
@@ -71,7 +74,7 @@
     {:update-count 0}
     (let [filtered-user (filter-nil-values user)
           set-clause (str/join ", " (map (fn [[k _]] (str (name k) " = ?")) filtered-user))
-          values (concat (vals filtered-user) [(Integer/parseInt id)])
+          values (concat (vals filtered-user) [(Integer. id)])
           query (str "UPDATE users SET " set-clause " WHERE id = ?;")]
       (log-query query values)
       (jdbc/execute! ds (into [query] values)))))
@@ -79,28 +82,28 @@
 ;; Update a user's username
 (defn update-user-username [id new-username]
   (let [query "UPDATE users SET username = ? WHERE id = ?;"
-        params [new-username (Integer/parseInt id)]]
+        params [new-username (Integer. id)]]
     (log-query query params)
     (jdbc/execute! ds (into [query] params))))
 
 ;; Update a user's email
 (defn update-user-email [id new-email]
   (let [query "UPDATE users SET email = ? WHERE id = ?;"
-        params [new-email (Integer/parseInt id)]]
+        params [new-email (Integer. id)]]
     (log-query query params)
     (jdbc/execute! ds (into [query] params))))
 
 ;; Update a user's password
 (defn update-user-password [id new-password]
   (let [query "UPDATE users SET password = ? WHERE id = ?;"
-        params [new-password (Integer/parseInt id)]]
+        params [new-password (Integer. id)]]
     (log-query query params)
     (jdbc/execute! ds (into [query] params))))
 
 ;; Delete a user
 (defn delete-user [id]
   (let [query "DELETE FROM users WHERE id = ?;"
-        params [(Integer/parseInt id)]]
+        params [(Integer. id)]]
     (log-query query params)
     (jdbc/execute! ds (into [query] params))))
 
@@ -109,7 +112,7 @@
   (let [query "SELECT roles.id, roles.name, roles.description FROM roles
                JOIN users_roles ON roles.id = users_roles.role_id
                WHERE users_roles.user_id = ?;"
-        params [(Integer/parseInt id)]
+        params [(Integer. id)]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
     (map remove-namespace (map #(into {} %) result))))
@@ -119,7 +122,7 @@
   (let [query "SELECT permissions.id, permissions.name, permissions.description FROM permissions
                JOIN users_permissions ON permissions.id = users_permissions.permission_id
                WHERE users_permissions.user_id = ?;"
-        params [(Integer/parseInt id)]
+        params [(Integer. id)]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
     (map remove-namespace (map #(into {} %) result))))

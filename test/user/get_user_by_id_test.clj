@@ -18,6 +18,6 @@
 (deftest test-get-user-by-id
   (testing "get-user-by-id returns a user by id"
     (let [user (model/get-user-by-id 4)
-          id (get user :users/id)]
+          id (get user :id)]
       (is (= {:status 200 :body user}
              (get-user-by-id id))))))

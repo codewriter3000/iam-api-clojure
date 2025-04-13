@@ -1,8 +1,9 @@
 (ns user.update-user-password-test
-  (:require [clojure.test :refer :all]
-            [iam-clj-api.user.controller :refer :all]
-            [iam-clj-api.user.model :as model]
-            [buddy.hashers :as hashers]))
+  (:require
+   [clojure.test :refer :all]
+   [iam-clj-api.user.controller :refer :all]
+   [iam-clj-api.user.model :as model]
+   [lib.response :refer [success]]))
 
 (defn setup [f]
   (model/drop-user-table)
@@ -15,4 +16,4 @@
 (deftest test-update-user-password
   (testing "Update user password"
     (let [result (update-user-password 1 "Password2!")]
-      (is (= {:status 200 :body "Password updated"} result)))))
+      (is (= (success 200 "Password updated successfully") result)))))

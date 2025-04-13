@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [iam-clj-api.user.controller :refer :all]
             [iam-clj-api.user.model :as model]
-            [buddy.hashers :as hashers]))
+            [buddy.hashers :as hashers]
+            [lib.response :refer [success]]))
 
 (defn setup [f]
   (model/drop-user-table)
@@ -17,4 +18,4 @@
 (deftest test-login-user
   (testing "Login of user"
     (let [result (login-user "test" "Password1!")]
-      (is (=  {:status 200 :body "Login successful"} result)))))
+      (is (= (success 200 "Login successful") result)))))

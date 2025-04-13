@@ -53,7 +53,7 @@
     (log-query query [])
     (if (empty? result)
       nil
-      (map #(into {} %) result))))
+      (map remove-namespace (map #(into {} %) result)))))
 
 ;; Get a role by ID
 (defn get-role-by-id [id]
@@ -81,7 +81,7 @@
     {:update-count 0}
     (let [filtered-role (filter-nil-values role)
           set-clause (str/join ", " (map (fn [[k _]] (str (name k) " = ?")) filtered-role))
-          values (concat (vals filtered-role) [(Integer/parseInt id)])
+          values (concat (vals filtered-role) [(Integer. id)])
           query (str "UPDATE roles SET " set-clause " WHERE id = ?;")]
       (log-query query values)
       (jdbc/execute! ds (into [query] values)))))
@@ -89,9 +89,16 @@
 ;; Delete a role
 (defn delete-role [id]
   (let [query "DELETE FROM roles WHERE id = ?;"
-        params [(Integer/parseInt id)]]
-    (log-query query params)
-    (jdbc/execute! ds (into [query] params))))
+        params [(Integer. id)]]
+          (log-query query params)
+          (try
+            (jdbc/execute! ds (into [query] params))
+            (do
+            (log/info "Role deleted successfully for ID:" id)
+            {:delete-count 1}) ; Return success if the query executes
+            (catch Exception e
+            (log/error e "Failed to delete role for ID:" id)
+            {:delete-count 0})))) ; Return failure if an exception occurs
 
 ;; Get users with a specific role
 (defn get-users-with-role [id]
@@ -99,26 +106,28 @@
                FROM users u
                JOIN users_roles ur ON u.id = ur.user_id
                WHERE ur.role_id = ?;"
-        params [(Integer/parseInt id)]
+        params [(Integer. id)]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
     (if (empty? result)
       nil
-      (map #(into {} %) result))))
+      (map remove-namespace (map #(into {} %) result)))))
 
 ;; Add a role to a user
 (defn add-role-to-user [role-id user-id]
   (let [query "INSERT INTO users_roles (role_id, user_id) VALUES (?, ?);"
-        params [role-id user-id]]
+        params [(Integer. role-id) (Integer. user-id)]] ; Ensure both parameters are integers
     (log-query query params)
     (jdbc/execute! ds (into [query] params))))
 
 ;; Remove a role from a user
 (defn remove-role-from-user [role-id user-id]
   (let [query "DELETE FROM users_roles WHERE role_id = ? AND user_id = ?;"
-        params [role-id user-id]]
+        params [(Integer. role-id) (Integer. user-id)]]
     (log-query query params)
-    (jdbc/execute! ds (into [query] params))))
+    (let [result (jdbc/execute! ds (into [query] params))]
+      (log/info "Query result:" result)
+      result)))
 
 ;; Get permissions for a role
 (defn get-permissions-for-role [id]
@@ -126,23 +135,30 @@
                FROM permissions p
                JOIN roles_permissions rp ON p.id = rp.permission_id
                WHERE rp.role_id = ?;"
-        params [(Integer/parseInt id)]
+        params [(Integer. id)]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
     (if (empty? result)
       nil
-      (map #(into {} %) result))))
+      (map remove-namespace (map #(into {} %) result)))))
 
 ;; Add a permission to a role
 (defn add-permission-to-role [permission-id role-id]
   (let [query "INSERT INTO roles_permissions (role_id, permission_id) VALUES (?, ?);"
-        params [role-id permission-id]]
+        params [(Integer. role-id) (Integer. permission-id)]] ; Ensure both parameters are integers
     (log-query query params)
-    (jdbc/execute! ds (into [query] params))))
+    (try
+      (jdbc/execute! ds (into [query] params))
+      {:insert-count 1} ; Return success if the query executes
+      (catch Exception e
+        (log/error e "Failed to add permission to role")
+        {:insert-count 0})))) ; Return failure if an exception occurs
 
 ;; Remove a permission from a role
 (defn remove-permission-from-role [role-id permission-id]
   (let [query "DELETE FROM roles_permissions WHERE role_id = ? AND permission_id = ?;"
-        params [role-id permission-id]]
+        params [(Integer. role-id) (Integer. permission-id)]] ; Ensure both parameters are integers
     (log-query query params)
-    (jdbc/execute! ds (into [query] params))))
+    (let [result (jdbc/execute! ds (into [query] params))]
+      (log/info "Query result:" result)
+      result)))

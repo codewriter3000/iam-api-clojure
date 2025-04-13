@@ -21,7 +21,7 @@
   (testing "update-role-description with invalid id"
     (let [role (model/get-role-by-id 1)
           new-description "New description"]
-      (is (= {:status 400 :error "Failed to update role description"}
+      (is (= {:status 404 :error "Role not found"}
              (controller/update-role-description 100 new-description)))))
 
   (testing "update-role-description with empty new description"
