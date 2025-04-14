@@ -1,7 +1,7 @@
 (ns lib.core
-  (:require [clojure.set :as set]
-            [env :as env]
-            [next.jdbc :as jdbc]))
+  (:require
+   [env :as env]
+   [next.jdbc :as jdbc]))
 
 (defn remove-namespace [m]
   (into {} (map (fn [[k v]] [(keyword (name k)) v]) m)))

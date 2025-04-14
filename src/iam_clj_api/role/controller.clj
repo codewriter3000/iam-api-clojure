@@ -1,63 +1,45 @@
 (ns iam-clj-api.role.controller
-  (:require [lib.core :refer :all]
-            [iam-clj-api.role.model :as model]
-            [iam-clj-api.permission.model :as perm-model]
-            [iam-clj-api.user.model :as user-model]
-            [clojure.tools.logging :as log]))
-
-;; Helper function to check if a role exists
-(defn- role-exists? [id]
-  (let [role (model/get-role-by-id id)]
-    (if role
-      role
-      nil)))
-
-;; Helper function to check if a user exists
-(defn- user-exists? [id]
-  (log/info "Checking if user exists with ID:" id)
-  (let [user (user-model/get-user-by-id id)]
-    (if user
-      user
-      (do
-        (log/warn "User not found with ID:" id)
-        nil))))
-
-;; Helper function to check if a permission exists
-(defn- permission-exists? [id]
-  (let [permission (perm-model/get-permission-by-id id)]
-    (if permission
-      permission
-      nil)))
+  (:require
+   [clojure.tools.logging :as log]
+   [iam-clj-api.role.model :as model]
+   [lib.core :refer :all]
+   [lib.response :refer [error success work]]
+   [lib.exists :refer [user-exists? role-exists?]]))
 
 ;; Get all roles
 (defn get-all-roles []
   (log/info "Fetching all roles")
-  {:status 200 :body (model/get-all-roles)})
+  (work 200 (model/get-all-roles)))
 
 ;; Get a role by ID
 (defn get-role-by-id [id]
   (log/info "Fetching role by ID:" id)
   (let [role (role-exists? id)]
     (if role
-      {:status 200 :body role}
-      {:status 404 :error "Role not found"})))
+      (work 200 role)
+      (error 404 "Role not found"))))
 
 ;; Get a role by name
 (defn get-role-by-name [name]
   (log/info "Fetching role by name:" name)
   (let [role (model/get-role-by-name name)]
     (if role
-      {:status 200 :body role}
-      {:status 404 :error "Role not found"})))
+      (work 200 role)
+      (error 404 "Role not found"))))
 
 ;; Validate role input
 (defn validate-input [role]
   (let [name (get role :name)
         description (get role :description)]
     (cond
-      (empty? name) {:status 400 :error "Missing name"}
-      (not (empty? (model/get-role-by-name name))) {:status 400 :error (str "Role with name " name " already exists")}
-      :else {:name name :description description})))
+      (empty? name)
+      (error 422 "Missing name")
+
+      (seq (model/get-role-by-name name))
+      (error 422 (str "Role with name " name " already exists"))
+
+      :else
+      {:name name :description description})))
 
 ;; Insert a new role
 (defn insert-role [role]
@@ -67,7 +49,7 @@
       validated-input
       (do
         (model/insert-role validated-input)
-        {:status 201 :body "Role created successfully"}))))
+        (success 201 "Role created successfully")))))
 
 ;; Update a role
 (defn update-role [id role]

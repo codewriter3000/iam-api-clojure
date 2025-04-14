@@ -25,17 +25,14 @@
 
 (deftest test-validate-input
   (testing "Validation of input"
-    (is (= (error 400 "All fields are required")
+    (is (= {:error "All fields are required"}
            (validate-input {:username "" :email "test@example.com" :password "Password1!"})))
 
-    (is (= (error 400 "Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character")
-           (validate-input {:username "username" :email "test@example.com" :password "password"})))
-
-    (is (= (error 400 "Username must be between 3 and 20 characters")
+    (is (= {:error "Username must be between 3 and 20 characters"}
            (validate-input {:username "ab" :email "test@example.com" :password "Password1!"})))
 
-    (is (= (error 400 "Email is invalid")
+    (is (= {:error "Email is invalid"}
            (validate-input {:username "username" :email "invalid-email" :password "Password1!"})))
 
-    (is (= (error 400 "Username already exists")
+    (is (= {:error "Username already exists"}
            (validate-input {:username "existinguser" :email "test@example.com" :password "Password1!"})))))

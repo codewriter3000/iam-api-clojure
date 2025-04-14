@@ -1,14 +1,9 @@
 (ns iam-clj-api.permission.controller
   (:require [lib.core :refer :all]
             [iam-clj-api.permission.model :as model]
-            [clojure.tools.logging :as log]))
-
-;; Helper function to check if a permission exists
-(defn- permission-exists? [id]
-  (let [permission (model/get-permission-by-id id)]
-    (if permission
-      permission
-      nil)))
+            [clojure.tools.logging :as log]
+            [lib.response :refer [error success work]]
+            [lib.exists :refer [permission-exists?]]))
 
 ;; Get all permissions
 (defn get-all-permissions []

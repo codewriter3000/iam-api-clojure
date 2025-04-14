@@ -4,15 +4,8 @@
             [iam-clj-api.role.model :as role-model]
             [buddy.hashers :as hashers]
             [clojure.tools.logging :as log]
-            [lib.response :refer [error success work]]))
-
-;; Helper function to check if a user exists
-(defn- user-exists? [id]
-  (let [user (model/get-user-by-id id)]
-    (log/info "Checking if user exists with ID:" id)
-    (if user
-      user
-      nil)))
+            [lib.response :refer [error success work]]
+            [lib.exists :refer [user-exists?]]))
 
 ;; Validate user input
 (defn validate-input [user]
@@ -21,19 +14,16 @@
         password (get user :password)]
     (cond
       (or (empty? username) (empty? email) (empty? password))
-      (error 400 "All fields are required")
-
-      (not (re-matches #"(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}" password))
-      (error 400 "Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character")
+      {:error "All fields are required"}
 
       (or (< (count username) 3) (> (count username) 20))
-      (error 400 "Username must be between 3 and 20 characters")
+      {:error "Username must be between 3 and 20 characters"}
 
       (not (re-matches #".+@.+\..+" email))
-      (error 400 "Email is invalid")
+      {:error "Email is invalid"}
 
-      (not (empty? (model/get-user-by-username username)))
-      (error 400 "Username already exists")
+      (seq (model/get-user-by-username username))
+      {:error "Username already exists"}
 
       :else
       (assoc user :password (hashers/derive (get user :password))))))
@@ -41,12 +31,12 @@
 ;; Insert a new user
 (defn insert-user [user]
   (log/info "Inserting user:" user)
-  (let [validated-user (validate-input user)]
-    (if (not= 400 (:status validated-user))
+  (let [validated-input (validate-input user)]
+    (if (:error validated-input)
+      (error 422 (:error validated-input))
       (do
-        (model/insert-user validated-user)
-        (success 201 "User created successfully"))
-      validated-user)))
+        (model/insert-user validated-input)
+        (success 201 "User created successfully")))))
 
 ;; Login a user
 (defn login-user [username password]
@@ -109,18 +99,19 @@
   (let [user (user-exists? id)]
     (if user
       (let [result (model/update-user-password id (hashers/derive new-password))]
-        (success 200 "Password updated successfully"))
+        (if (= 1 (:next.jdbc/update-count (first result)))
+          (success 200 "Password updated successfully")
+          (error 400 "Failed to update password")))
       (error 404 "User not found"))))
 
 ;; Delete a user
 (defn delete-user [id]
   (log/info "Deleting user with ID:" id)
   (let [user (user-exists? id)]
-    (log/info "User exists:" user)
     (if user
       (let [result (model/delete-user id)]
         (if result
-          (success 200 "User deleted successfully")
+          (success 204 "User deleted successfully")
           (error 400 "Failed to delete user")))
       (error 404 "User not found"))))
 
