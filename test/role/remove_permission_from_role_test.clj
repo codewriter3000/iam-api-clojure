@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [iam-clj-api.role.model :as role-model]
             [iam-clj-api.permission.model :as perm-model]
-            [iam-clj-api.role.controller :as controller]))
+            [iam-clj-api.role.controller :as controller]
+            [lib.response :refer [error success work]]))
 
 (defn setup [f]
     (role-model/drop-role-table)
@@ -25,18 +26,18 @@
       (is (= "permission1" (get permission :name)))
       (controller/add-permission-to-role (get role :id) (get permission :id))
       (is (= 1 (count (role-model/get-permissions-for-role (get role :id)))))
-      (is (= {:status 200, :body "Permission removed from role"}
+      (is (= (success 204 "Permission removed from role")
              (controller/remove-permission-from-role (get role :id) (get permission :id))))
       (is (= 0 (count (role-model/get-permissions-for-role (get role :id))))))))
 
     (testing "Remove permission from role with invalid permission id"
         (let [role (role-model/get-role-by-name "role1")]
             (is (= "role1" (get role :name)))
-            (is (= {:status 404, :error "Permission not found"}
+            (is (= (error 404 "Permission not found")
                  (controller/remove-permission-from-role 100 (get role :id))))))
 
     (testing "Remove permission from role with invalid role id"
         (let [permission (perm-model/get-permission-by-name "permission1")]
             (is (= "permission1" (get permission :name)))
-            (is (= {:status 404, :error "Role not found"}
+            (is (= (error 404 "Role not found")
                  (controller/remove-permission-from-role (get permission :id) 100)))))

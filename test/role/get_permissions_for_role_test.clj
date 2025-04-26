@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [iam-clj-api.role.model :as role-model]
             [iam-clj-api.permission.model :as perm-model]
-            [iam-clj-api.role.controller :as controller]))
+            [iam-clj-api.role.controller :as controller]
+            [lib.response :refer [error]]))
 
 (defn setup [f]
     (role-model/drop-role-table)
@@ -32,7 +33,7 @@
         (is (= "permission3" (get (last permissions) :name))))))
   (testing "Get permissions for role with invalid role id"
     (let [invalid-role (controller/get-permissions-for-role 100)]
-      (is (= {:status 404, :error "Role not found"} invalid-role))))
+      (is (= (error 404 "Role not found") invalid-role))))
   (testing "Get permissions for role with no permissions"
     (role-model/insert-role {:name "role-with-no-permissions" :description "description1"})
     (let [role (role-model/get-role-by-name "role-with-no-permissions")]

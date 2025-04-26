@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [iam-clj-api.permission.model :as perm-model]
             [iam-clj-api.permission.controller :as controller]
-            [iam-clj-api.user.model :as user-model]))
+            [iam-clj-api.user.model :as user-model]
+            [lib.response :refer [error]]))
 
 (defn setup [f]
   (perm-model/drop-permission-table)
@@ -33,10 +34,10 @@
   (testing "Remove permission from user with invalid permission id"
     (let [user (user-model/get-user-by-username "testuser1")]
       (is (= "testuser1" (get user :username)))
-      (is (= {:status 400, :error "Failed to remove permission from user"} (controller/remove-permission-from-user 100 (get user :id)))))))
+      (is (= (error 404 "Permission not found") (controller/remove-permission-from-user 100 (get user :id)))))))
 
 (deftest test-remove-permission-from-user-with-invalid-user-id []
   (testing "Remove permission from user with invalid user id"
     (let [permission (perm-model/get-permission-by-name "test-permission")]
       (is (= "test-permission" (get permission :name)))
-      (is (= {:status 400, :error "Failed to remove permission from user"} (controller/remove-permission-from-user (get permission :id) 100))))))
+      (is (= (error 404 "User not found") (controller/remove-permission-from-user (get permission :id) 100))))))

@@ -49,8 +49,7 @@
 ;; Get all users
 (defn get-all-users []
   (log/info "Fetching all users")
-  (let [users (model/get-all-users)]
-    (work 200 (map remove-namespace users))))
+  (work 200 (map remove-namespace (model/get-all-users))))
 
 ;; Get a user by ID
 (defn get-user-by-id [id]

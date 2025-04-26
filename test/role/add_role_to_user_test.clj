@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [iam-clj-api.role.model :as role-model]
             [iam-clj-api.user.model :as user-model]
-            [iam-clj-api.role.controller :as role-controller]))
+            [iam-clj-api.role.controller :as role-controller]
+            [lib.response :refer [error success work]]))
 
 (defn setup [f]
   (role-model/drop-role-table)
@@ -17,15 +18,15 @@
 
 (deftest test-add-role-to-user []
   (testing "Add role to user"
-    (is (= {:status 200, :body "Role added to user"}
+    (is (= (success 200 "Role added to user")
            (role-controller/add-role-to-user 1 1))))
 
   (testing "Add role to user with invalid role id"
-    (is (= {:status 404, :error "Role not found"}
+    (is (= (error 404 "Role not found")
            (role-controller/add-role-to-user 100 1))))
 
   (testing "Add role to user with invalid user id"
     (let [role (role-model/get-role-by-name "role1")]
       (is (= "role1" (get role :name)))
-      (is (= {:status 404, :error "User not found"}
+      (is (= (error 404 "User not found")
              (role-controller/add-role-to-user (get role :id) 100))))))

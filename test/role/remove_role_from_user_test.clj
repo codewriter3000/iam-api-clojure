@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [iam-clj-api.role.model :as role-model]
             [iam-clj-api.user.model :as user-model]
-            [iam-clj-api.role.controller :as controller]))
+            [iam-clj-api.role.controller :as controller]
+            [lib.response :refer [error success work]]))
 
 (defn setup [f]
   (role-model/drop-role-table)
@@ -23,7 +24,7 @@
       (is (= "admin" (get role :name)))
       (is (= "admin" (get user :username)))
       (is (= 1 (count (user-model/get-roles-for-user (get user :id)))))
-      (is (= {:status 200, :body "Role removed from user"}
+      (is (= (success 204 "Role removed from user")
              (controller/remove-role-from-user (get role :id) (get user :id))))
       (is (= 0 (count (user-model/get-roles-for-user (get user :id))))))))
 
@@ -31,12 +32,12 @@
     (testing "Remove role from user with invalid role id"
         (let [user (user-model/get-user-by-username "admin")]
         (is (= "admin" (get user :username)))
-        (is (= {:status 404, :error "Role not found"}
+        (is (= (error 404 "Role not found")
                (controller/remove-role-from-user 100 (get user :id)))))))
 
 (deftest test-remove-role-from-user-with-invalid-user-id []
     (testing "Remove role from user with invalid user id"
         (let [role (role-model/get-role-by-name "admin")]
         (is (= "admin" (get role :name)))
-        (is (= {:status 404, :error "User not found"}
+        (is (= (error 404 "User not found")
                (controller/remove-role-from-user (get role :id) 100))))))

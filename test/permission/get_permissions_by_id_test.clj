@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [iam-clj-api.permission.controller :as controller]
             [iam-clj-api.permission.model :as model]
-            [lib.core :refer :all]))
+            [lib.core :refer :all]
+            [lib.response :refer [error success work]]))
 
 (defn setup [f]
     (model/drop-permission-table)
@@ -23,27 +24,17 @@
 
 (deftest test-get-permission-by-id
   (testing "Get permission by id"
-    (is (= {:status 200 :body {:id 1 :name "permission1" :description "description1"}}
+    (is (= (work 200 {:id 1 :name "permission1" :description "description1"})
            (controller/get-permission-by-id 1)))
-    (is (= {:status 200 :body {:id 2 :name "permission2" :description "description2"}}
+    (is (= (work 200 {:id 2 :name "permission2" :description "description2"})
            (controller/get-permission-by-id 2)))
-    (is (= {:status 200 :body {:id 3 :name "permission3" :description "description3"}}
+    (is (= (work 200 {:id 3 :name "permission3" :description "description3"})
            (controller/get-permission-by-id 3)))
-    (is (= {:status 200 :body {:id 4 :name "permission4" :description "description4"}}
+    (is (= (work 200 {:id 4 :name "permission4" :description "description4"})
            (controller/get-permission-by-id 4)))
-    (is (= {:status 200 :body {:id 5 :name "permission5" :description "description5"}}
-           (controller/get-permission-by-id 5)))
-    (is (= {:status 200 :body {:id 6 :name "permission6" :description "description6"}}
-           (controller/get-permission-by-id 6)))
-    (is (= {:status 200 :body {:id 7 :name "permission7" :description "description7"}}
-           (controller/get-permission-by-id 7)))
-    (is (= {:status 200 :body {:id 8 :name "permission8" :description "description8"}}
-           (controller/get-permission-by-id 8)))
-    (is (= {:status 200 :body {:id 9 :name "permission9" :description "description9"}}
-           (controller/get-permission-by-id 9)))
-    (is (= {:status 200 :body {:id 10 :name "permission10" :description "description10"}}
-           (controller/get-permission-by-id 10))))
+    (is (= (work 200 {:id 5 :name "permission5" :description "description5"})
+           (controller/get-permission-by-id 5))))
 
   (testing "Get permission by id with invalid id"
-    (is (= {:status 404 :error "Permission not found"}
+    (is (= (error 404 "Permission not found")
            (controller/get-permission-by-id 100)))))

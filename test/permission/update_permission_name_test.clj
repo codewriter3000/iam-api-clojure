@@ -1,7 +1,8 @@
 (ns permission.update-permission-name-test
   (:require [clojure.test :refer :all]
             [iam-clj-api.permission.model :as model]
-            [iam-clj-api.permission.controller :as controller]))
+            [iam-clj-api.permission.controller :as controller]
+            [lib.response :refer [error success]]))
 
 (defn setup [f]
   (model/drop-permission-table)
@@ -24,10 +25,10 @@
   (testing "Update permission name with empty name"
     (let [permission (model/get-permission-by-name "test-permission")]
       (is (= "test-permission" (get permission :name)))
-      (is (= {:status 400 :error "Missing new name"} (controller/update-permission-name (get permission :id) ""))))))
+      (is (= (error 400 "Missing new name") (controller/update-permission-name (get permission :id) ""))))))
 
 (deftest test-update-permission-name-with-invalid-id []
   (testing "Update permission name with invalid id"
     (let [permission (model/get-permission-by-name "test-permission")]
       (is (= "test-permission" (get permission :name)))
-      (is (= {:status 400 :error "Failed to update permission name"} (controller/update-permission-name 100 "new-test-permission"))))))
+      (is (= (error 404 "Permission not found") (controller/update-permission-name 100 "new-test-permission"))))))

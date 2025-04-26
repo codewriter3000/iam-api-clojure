@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [iam-clj-api.permission.controller :as controller]
             [iam-clj-api.permission.model :as model]
-            [lib.core :refer :all]))
+            [lib.core :refer :all]
+            [lib.response :refer [work]]))
 
 (defn setup [f]
   (model/drop-permission-table)
@@ -23,7 +24,7 @@
 
 (deftest test-get-all-permissions
   (testing "Get all permissions"
-    (is (= {:status 200 :body [{:id 1 :name "permission1" :description "description1"}
+    (is (= (work 200 [{:id 1 :name "permission1" :description "description1"}
                                {:id 2 :name "permission2" :description "description2"}
                                {:id 3 :name "permission3" :description "description3"}
                                {:id 4 :name "permission4" :description "description4"}
@@ -32,5 +33,5 @@
                                {:id 7 :name "permission7" :description "description7"}
                                {:id 8 :name "permission8" :description "description8"}
                                {:id 9 :name "permission9" :description "description9"}
-                               {:id 10 :name "permission10" :description "description10"}]}
+                               {:id 10 :name "permission10" :description "description10"}])
            (controller/get-all-permissions)))))

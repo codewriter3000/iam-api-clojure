@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [iam-clj-api.role.model :as role-model]
             [iam-clj-api.user.model :as user-model]
-            [iam-clj-api.role.controller :as role-controller]))
+            [iam-clj-api.role.controller :as role-controller]
+            [lib.response :refer [error]]))
 
 (defn setup [f]
     (role-model/drop-role-table)
@@ -31,7 +32,7 @@
         (is (= "user3" (get (last users) :username))))))
   (testing "Get users with role with invalid role id"
     (let [invalid-role (role-controller/get-users-with-role 100)]
-      (is (= {:status 404, :error "Role not found"} invalid-role))))
+      (is (= (error 404 "Role not found") invalid-role))))
   (testing "Get users with role with no users"
     (role-model/insert-role {:name "role-assigned-to-nobody" :description "description1"})
     (let [role (role-model/get-role-by-name "role-assigned-to-nobody")]

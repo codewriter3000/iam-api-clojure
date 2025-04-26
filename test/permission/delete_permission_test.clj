@@ -1,7 +1,8 @@
 (ns permission.delete-permission-test
   (:require [clojure.test :refer :all]
             [iam-clj-api.permission.model :as model]
-            [iam-clj-api.permission.controller :as controller]))
+            [iam-clj-api.permission.controller :as controller]
+            [lib.response :refer [error]]))
 
 (defn setup [f]
     (model/drop-permission-table)
@@ -16,4 +17,4 @@
     (let [permission (model/get-permission-by-name "test-permission")]
       (is (= "test-permission" (get permission :name)))
       (controller/delete-permission (get permission :id))
-      (is (= {:status 404 :error "Permission not found"} (controller/get-permission-by-id (get permission :id)))))))
+      (is (= (error 404 "Permission not found") (controller/get-permission-by-id (get permission :id)))))))
