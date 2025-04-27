@@ -2,101 +2,65 @@
   (:require [compojure.core :refer :all]
             [iam-clj-api.user.controller :as controller]
             [ring.middleware.json :as json]
-            [ring.util.request :as request]
-            [ring.util.response :refer [response]]))
+            [ring.util.request :as request]))
 
 (defroutes user-view-routes
   (context "/user" []
     ;; Get all users
     (GET "/" []
-      (response
-       (controller/get-all-users)))
+      (controller/get-all-users))
 
     ;; Get a user by ID
     (GET "/:id" [id]
-      (if id
-        (response (controller/get-user-by-id id))
-        {:status 400 :body "Missing user ID"}))
+      (controller/get-user-by-id id))
 
     ;; Create a new user
     (POST "/" request
       (let [user (get-in request [:body])]
-        (if user
-          (do
-            (controller/insert-user user)
-            {:status 201 :body "User created"})
-          {:status 400 :body "Invalid user data"})))
+        (controller/insert-user user)))
 
     ;; User login
     (POST "/login" [username password]
-      (if (and username password)
-        (response (controller/login-user username password))
-        {:status 400 :body "Missing username or password"}))
+      (controller/login-user username password))
 
-      ;; Update a user
+    ;; Update a user
     (PUT "/:id" request
       (let [id (get-in request [:params :id])
             user (get-in request [:body])]
-        (if (and id user)
-          (do
-            (controller/update-user id user)
-            {:status 200 :body "User updated"})
-          {:status 400 :body "Missing user ID or data"})))
+        (controller/update-user id user)))
 
     ;; Update a user's username
     (PUT "/:id/username" [id new-username]
-      (if (and id new-username)
-        (response (controller/update-user-username id new-username))
-        {:status 400 :body "Missing user ID or new username"}))
+      (controller/update-user-username id new-username))
 
     ;; Update a user's email
     (PUT "/:id/email" [id new-email]
-      (if (and id new-email)
-        (response (controller/update-user-email id new-email))
-        {:status 400 :body "Missing user ID or new email"}))
+      (controller/update-user-email id new-email))
 
     ;; Update a user's password
     (PUT "/:id/password" [id new-password]
-      (if (and id new-password)
-        (response (controller/update-user-password id new-password))
-        {:status 400 :body "Missing user ID or new password"}))
+      (controller/update-user-password id new-password))
 
     ;; Delete a user
     (DELETE "/:id" [id]
-      (if id
-        (do
-          (controller/delete-user id)
-          {:status 200 :body "User deleted"})
-        {:status 400 :body "Missing user ID"}))
+      (controller/delete-user id))
 
     ;; Get permissions for a user
     (GET "/:id/permissions" [id]
-      (if id
-        (response (controller/get-permissions-for-user id))
-        {:status 400 :body "Missing user ID"}))
+      (controller/get-permissions-for-user id))
 
     ;; Get roles for a user
     (GET "/:id/roles" [id]
-      (if id
-        (response (controller/get-roles-for-user id))
-        {:status 400 :body "Missing user ID"}))
+      (controller/get-roles-for-user id))
 
     ;; Add roles to a user
     (POST "/:id/roles" request
       (let [id (get-in request [:params :id])
             roles (get-in request [:body :roles])]
-        (if (and id roles)
-          (do
-            (controller/add-roles-to-user id roles)
-            {:status 200 :body "Roles added to user"})
-          {:status 400 :body "Missing user ID or roles"})))
+        (controller/add-roles-to-user id roles)))
 
     ;; Remove roles from a user
     (DELETE "/:id/roles" request
       (let [id (get-in request [:params :id])
             roles (get-in request [:body :roles])]
-        (if (and id roles)
-          (do
-            (controller/remove-roles-from-user id roles)
-            {:status 200 :body "Roles removed from user"})
-          {:status 400 :body "Missing user ID or roles"})))))
+        (controller/remove-roles-from-user id roles)))))
