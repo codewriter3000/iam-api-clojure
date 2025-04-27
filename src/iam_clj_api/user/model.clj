@@ -2,7 +2,16 @@
   (:require [next.jdbc :as jdbc]
             [lib.core :refer :all]
             [clojure.string :as str]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [schema.core :as s]))
+
+;; User Schema
+(def User
+  {:id s/Int
+   :username s/Str
+   :email s/Str
+   :first_name (s/maybe s/Str)
+   :last_name (s/maybe s/Str)})
 
 (def ds (get-datasource))
 

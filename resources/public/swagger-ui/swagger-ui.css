@@ -1,11 +1,23 @@
 :root {
     --color-text: #ffffff;
     --color-select: #262626;
+    --color-blue: #0f62fe;
+    --color-green: #198038;
+    --color-purple: #8a3ffc;
+    --color-red: #da1e28;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/IBMPlexSans-Regular.woff2') format('woff2'),
+       url('/fonts/IBMPlexSans-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
 }
 
 .swagger-ui {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', 'IBM Plex Sans', sans-serif;
 }
 .swagger-ui html {
   line-height: 1.15;
@@ -111,7 +123,7 @@
 .swagger-ui optgroup,
 .swagger-ui select,
 .swagger-ui textarea {
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 100%;
   line-height: 1.15;
   margin: 0;
@@ -2419,15 +2431,15 @@
     float: none;
   }
 }
-.swagger-ui .sans-serif {
+.swagger-ui .'IBM Plex Sans', sans-serif {
   font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, helvetica,
-    helvetica neue, ubuntu, roboto, noto, segoe ui, arial, sans-serif;
+    helvetica neue, ubuntu, roboto, noto, segoe ui, arial, 'IBM Plex Sans', sans-serif;
 }
 .swagger-ui .serif {
   font-family: georgia, serif;
 }
-.swagger-ui .system-sans-serif {
-  font-family: sans-serif;
+.swagger-ui .system-'IBM Plex Sans', sans-serif {
+  font-family: 'IBM Plex Sans', sans-serif;
 }
 .swagger-ui .system-serif {
   font-family: serif;
@@ -2440,10 +2452,10 @@
   font-family: Courier Next, courier, monospace;
 }
 .swagger-ui .helvetica {
-  font-family: helvetica neue, helvetica, sans-serif;
+  font-family: helvetica neue, helvetica, 'IBM Plex Sans', sans-serif;
 }
 .swagger-ui .avenir {
-  font-family: avenir next, avenir, sans-serif;
+  font-family: avenir next, avenir, 'IBM Plex Sans', sans-serif;
 }
 .swagger-ui .athelas {
   font-family: athelas, georgia, serif;
@@ -7161,7 +7173,7 @@
 }
 .swagger-ui .opblock-tag {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 24px;
   margin: 0 0 5px;
 }
@@ -7174,7 +7186,7 @@
 .swagger-ui .opblock-tag small {
   color: var(--color-text);
   flex: 2;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
   font-weight: 400;
   padding: 0 10px;
@@ -7292,7 +7304,7 @@
   align-items: center;
   color: var(--color-text);
   display: flex;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   font-weight: 700;
   margin: 0 0 0 auto;
@@ -7303,7 +7315,7 @@
 .swagger-ui .opblock .opblock-section-header h4 {
   color: var(--color-text);
   flex: 1;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
   margin: 0;
 }
@@ -7311,7 +7323,7 @@
   background: #000;
   border-radius: 3px;
   color: #fff;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
   font-weight: 700;
   min-width: 80px;
@@ -7359,7 +7371,7 @@
 }
 .swagger-ui .opblock .opblock-summary-description {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 13px;
   word-break: break-word;
 }
@@ -7400,56 +7412,56 @@
   width: 24px;
 }
 .swagger-ui .opblock.opblock-post {
-  background: rgba(73, 204, 144, 0.1);
-  border-color: #49cc90;
+  background: rgba(25, 128, 56, 0.1);
+  border-color: var(--color-green);
 }
 .swagger-ui .opblock.opblock-post .opblock-summary-method {
-  background: #49cc90;
+  background: var(--color-green);
 }
 .swagger-ui .opblock.opblock-post .opblock-summary {
-  border-color: #49cc90;
+  border-color: var(--color-green);
 }
 .swagger-ui .opblock.opblock-post .tab-header .tab-item.active h4 span:after {
-  background: #49cc90;
+  background: var(--color-green);
 }
 .swagger-ui .opblock.opblock-put {
-  background: rgba(252, 161, 48, 0.1);
-  border-color: #fca130;
+  background: rgba(138, 63, 252, 0.1);
+  border-color: var(--color-purple);
 }
 .swagger-ui .opblock.opblock-put .opblock-summary-method {
-  background: #fca130;
+  background: var(--color-purple);
 }
 .swagger-ui .opblock.opblock-put .opblock-summary {
-  border-color: #fca130;
+  border-color: var(--color-purple);
 }
 .swagger-ui .opblock.opblock-put .tab-header .tab-item.active h4 span:after {
-  background: #fca130;
+  background: var(--color-purple);
 }
 .swagger-ui .opblock.opblock-delete {
-  background: rgba(249, 62, 62, 0.1);
-  border-color: #f93e3e;
+  background: rgba(218, 30, 40, 0.1);
+  border-color: var(--color-red);
 }
 .swagger-ui .opblock.opblock-delete .opblock-summary-method {
-  background: #f93e3e;
+  background: var(--color-red);
 }
 .swagger-ui .opblock.opblock-delete .opblock-summary {
-  border-color: #f93e3e;
+  border-color: var(--color-red);
 }
 .swagger-ui .opblock.opblock-delete .tab-header .tab-item.active h4 span:after {
-  background: #f93e3e;
+  background: var(--color-red);
 }
 .swagger-ui .opblock.opblock-get {
-  background: rgba(97, 175, 254, 0.1);
-  border-color: #61affe;
+  background: rgba(15, 98, 254, 0.1);
+  border-color: var(--color-blue);
 }
 .swagger-ui .opblock.opblock-get .opblock-summary-method {
-  background: #61affe;
+  background: var(--color-blue);
 }
 .swagger-ui .opblock.opblock-get .opblock-summary {
-  border-color: #61affe;
+  border-color: var(--color-blue);
 }
 .swagger-ui .opblock.opblock-get .tab-header .tab-item.active h4 span:after {
-  background: #61affe;
+  background: var(--color-blue);
 }
 .swagger-ui .opblock.opblock-patch {
   background: rgba(80, 227, 194, 0.1);
@@ -7555,7 +7567,7 @@
 .swagger-ui .tab li {
   color: var(--color-text);
   cursor: pointer;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   min-width: 60px;
   padding: 0;
@@ -7589,7 +7601,7 @@
 .swagger-ui .opblock-external-docs-wrapper,
 .swagger-ui .opblock-title_normal {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   margin: 0 0 5px;
   padding: 15px 20px;
@@ -7598,7 +7610,7 @@
 .swagger-ui .opblock-external-docs-wrapper h4,
 .swagger-ui .opblock-title_normal h4 {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   margin: 0 0 5px;
 }
@@ -7606,7 +7618,7 @@
 .swagger-ui .opblock-external-docs-wrapper p,
 .swagger-ui .opblock-title_normal p {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
   margin: 0;
 }
@@ -7640,7 +7652,7 @@
 .swagger-ui .responses-inner h4,
 .swagger-ui .responses-inner h5 {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   margin: 10px 0 5px;
 }
@@ -7651,7 +7663,7 @@
 }
 .swagger-ui .response-col_status {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
 }
 .swagger-ui .response-col_status .response-undocumented {
@@ -7662,7 +7674,7 @@
 }
 .swagger-ui .response-col_links {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
   max-width: 40em;
   padding-left: 2em;
@@ -7724,7 +7736,7 @@
   bottom: 10px;
   color: #fff;
   display: flex;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
   font-weight: 600;
   height: 30px;
@@ -7755,7 +7767,7 @@
   color: var(--color-text);
   display: flex;
   flex-direction: column;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   font-weight: 700;
   margin: -20px 15px 0 0;
@@ -7797,7 +7809,7 @@
 .swagger-ui .loading-container .loading:after {
   color: var(--color-text);
   content: "loading";
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 10px;
   font-weight: 700;
   left: 50%;
@@ -7871,7 +7883,7 @@
 }
 .swagger-ui section h3 {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
 }
 .swagger-ui a.nostyle {
   display: inline;
@@ -7927,7 +7939,7 @@
   border-radius: 4px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
   font-weight: 700;
   padding: 5px 23px;
@@ -7948,12 +7960,12 @@
   background-color: transparent;
   border-color: #ff6060;
   color: #ff6060;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
 }
 .swagger-ui .btn.authorize {
   background-color: transparent;
-  border-color: #49cc90;
-  color: #49cc90;
+  border-color: var(--color-green);
+  color: var(--color-green);
   display: inline;
   line-height: 1;
 }
@@ -7962,7 +7974,7 @@
   padding: 4px 20px 0 0;
 }
 .swagger-ui .btn.authorize svg {
-  fill: #49cc90;
+  fill: var(--color-green);
 }
 .swagger-ui .btn.execute {
   background-color: #4990e2;
@@ -8034,7 +8046,7 @@
 .swagger-ui button.invalid {
   animation: shake 0.4s 1;
   background: #feebeb;
-  border-color: #f93e3e;
+  border-color: var(--color-red);
 }
 .swagger-ui .copy-to-clipboard {
   align-items: center;
@@ -8090,7 +8102,7 @@
   border-radius: 4px;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
   font-weight: 700;
   padding: 5px 40px 5px 10px;
@@ -8103,7 +8115,7 @@
 .swagger-ui select.invalid {
   animation: shake 0.4s 1;
   background: #feebeb;
-  border-color: #f93e3e;
+  border-color: var(--color-red);
 }
 .swagger-ui .opblock-body select {
   min-width: 230px;
@@ -8121,7 +8133,7 @@
 }
 .swagger-ui label {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   font-weight: 700;
   margin: 0 0 5px;
@@ -8164,7 +8176,7 @@
 .swagger-ui textarea.invalid {
   animation: shake 0.4s 1;
   background: #feebeb;
-  border-color: #f93e3e;
+  border-color: var(--color-red);
 }
 .swagger-ui input[disabled],
 .swagger-ui select[disabled],
@@ -8213,7 +8225,7 @@
   width: 100%;
 }
 .swagger-ui textarea:focus {
-  border: 2px solid #61affe;
+  border: 2px solid var(--color-blue);
 }
 .swagger-ui textarea.curl {
   background: #41444e;
@@ -8306,13 +8318,13 @@
 .swagger-ui .dialog-ux .modal-ux-content p {
   color: #41444e;
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   margin: 0 0 5px;
 }
 .swagger-ui .dialog-ux .modal-ux-content h4 {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 18px;
   font-weight: 600;
   margin: 15px 0 0;
@@ -8334,7 +8346,7 @@
 .swagger-ui .dialog-ux .modal-ux-header h3 {
   color: var(--color-text);
   flex: 1;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 20px;
   font-weight: 600;
   margin: 0;
@@ -8475,7 +8487,7 @@
   color: #fff;
   cursor: pointer;
   display: flex;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 16px;
   margin: 0;
   padding: 10px 20px 10px 10px;
@@ -8492,7 +8504,7 @@
 }
 .swagger-ui section.models h5 {
   color: #fff;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 16px;
   margin: 0 0 10px;
 }
@@ -8544,7 +8556,7 @@
 }
 .swagger-ui .model-title {
   color: #fff;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 16px;
 }
 .swagger-ui .model-title img {
@@ -8553,8 +8565,8 @@
   position: relative;
 }
 .swagger-ui .model-deprecated-warning {
-  color: #f93e3e;
-  font-family: sans-serif;
+  color: var(--color-red);
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 16px;
   font-weight: 600;
   margin-right: 1em;
@@ -8577,7 +8589,7 @@
 }
 .swagger-ui .servers > label {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   margin: -20px 15px 0 0;
 }
@@ -8662,7 +8674,7 @@
 .swagger-ui table thead tr th {
   border-bottom: 1px solid rgba(59, 65, 81, 0.2);
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   font-weight: 700;
   padding: 12px 0;
@@ -8685,7 +8697,7 @@
 }
 .swagger-ui .parameter__name {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 16px;
   font-weight: 400;
   margin-right: 0.75em;
@@ -8773,7 +8785,7 @@
   color: #fff;
   display: flex;
   flex: 1;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 1.5em;
   font-weight: 700;
   max-width: 300px;
@@ -8790,7 +8802,7 @@
   justify-content: flex-end;
 }
 .swagger-ui .topbar .download-url-wrapper input[type="text"] {
-  border: 2px solid #62a03f;
+  border: 2px solid var(--color-blue);
   border-radius: 4px 0 0 4px;
   margin: 0;
   max-width: 100%;
@@ -8812,18 +8824,18 @@
   text-align: right;
 }
 .swagger-ui .topbar .download-url-wrapper .select-label select {
-  border: 2px solid #62a03f;
+  border: 2px solid var(--color-blue);
   box-shadow: none;
   flex: 2;
   outline: none;
   width: 100%;
 }
 .swagger-ui .topbar .download-url-wrapper .download-url-button {
-  background: #62a03f;
+  background: var(--color-blue);
   border: none;
   border-radius: 0 4px 4px 0;
   color: #fff;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 16px;
   font-weight: 700;
   padding: 4px 30px;
@@ -8863,11 +8875,11 @@
 .swagger-ui .info p,
 .swagger-ui .info table {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
 }
 .swagger-ui .info a {
   color: #4990e2;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
   transition: all 0.4s;
 }
@@ -8887,7 +8899,7 @@
 }
 .swagger-ui .info .title {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 36px;
   margin: 0;
 }
@@ -8903,11 +8915,11 @@
   vertical-align: super;
 }
 .swagger-ui .info .title small.version-stamp {
-  background-color: #89bf04;
+  background-color: var(--color-blue);
 }
 .swagger-ui .info .title small pre {
   color: #fff;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   margin: 0;
   padding: 0;
 }
@@ -8967,7 +8979,7 @@
 }
 .swagger-ui .scopes h2 {
   color: var(--color-text);
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
 }
 .swagger-ui .scopes h2 a {
@@ -8983,8 +8995,8 @@
 }
 .swagger-ui .errors-wrapper {
   animation: scaleUp 0.5s;
-  background: rgba(249, 62, 62, 0.1);
-  border: 2px solid #f93e3e;
+  background: rgba(218, 30, 40, 0.1);
+  border: 2px solid var(--color-red);
   border-radius: 4px;
   margin: 20px;
   padding: 10px 20px;
@@ -9020,7 +9032,7 @@
 .swagger-ui .errors-wrapper hgroup h4 {
   color: var(--color-text);
   flex: 1;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 20px;
   margin: 0;
 }
@@ -9186,7 +9198,7 @@
 .swagger-ui .json-schema-2020-12__title {
   color: #505050;
   display: inline-block;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   font-weight: 700;
   line-height: normal;
@@ -9406,7 +9418,7 @@
   border: none;
   color: #505050;
   color: #afaeae;
-  font-family: sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
   padding-right: 0;
 }

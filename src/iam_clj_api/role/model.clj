@@ -2,7 +2,14 @@
   (:require [next.jdbc :as jdbc]
             [lib.core :refer :all]
             [clojure.string :as str]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [schema.core :as s]))
+
+;; Role Schema
+(def Role
+  {:id s/Int
+   :name s/Str
+   :description (s/maybe s/Str)})
 
 (def ds (get-datasource))
 

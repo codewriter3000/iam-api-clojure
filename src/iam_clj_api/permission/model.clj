@@ -1,7 +1,14 @@
 (ns iam-clj-api.permission.model
   (:require [next.jdbc :as jdbc]
             [lib.core :refer :all]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [schema.core :as s]))
+
+;; Permission Schema
+(def Permission
+  {:id s/Int
+   :name s/Str
+   :description (s/maybe s/Str)})
 
 (def ds (get-datasource))
 

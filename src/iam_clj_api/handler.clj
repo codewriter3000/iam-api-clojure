@@ -34,12 +34,8 @@
         {:swagger {:ui "/swagger-ui/index.html"
                    :spec "/swagger.json"
                    :data {:info {:title "IAM API"
-                                 :description "API for managing users, roles, and permissions"}
-                          :tags [{:name "users" :description "User-related endpoints"}
-                                 {:name "roles" :description "Role-related endpoints"}
-                                 {:name "permissions" :description "Permission-related endpoints"}]}}}
+                                 :description "API for managing users, roles, and permissions"}}}}
         (context "/api" []
-          :tags ["API"]
           (GET "/" [] {:status 200 :body "API is running"})
           user-view/user-view-routes
           permission-view/permission-view-routes
