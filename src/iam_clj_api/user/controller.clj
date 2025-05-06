@@ -33,10 +33,10 @@
   (log/info "Inserting user:" user)
   (let [validated-input (validate-input user)]
     (if (:error validated-input)
-      (error 422 (:error validated-input))
+      (error 422 (:error validated-input)) ; Pass the error message directly
       (do
         (model/insert-user validated-input)
-        (success 201 "User created successfully")))))
+        (success 201 "User created successfully"))))) ; Pass the success message directly as a string
 
 ;; Login a user
 (defn login-user [username password]
@@ -49,14 +49,17 @@
 ;; Get all users
 (defn get-all-users []
   (log/info "Fetching all users")
-  (work 200 (map remove-namespace (model/get-all-users))))
+  (let [users (map remove-namespace (model/get-all-users))
+        result (work 200 {:users users})]
+    (log/info "Response: " result)
+    result))
 
 ;; Get a user by ID
 (defn get-user-by-id [id]
   (log/info "Fetching user by ID:" id)
   (let [user (user-exists? id)]
     (if user
-      (work 200 user)
+      (work 200 {:user user})
       (error 404 "User not found"))))
 
 ;; Update a user
@@ -67,7 +70,7 @@
       (let [result (model/update-user id user)]
         (if (= 1 (:update-count result))
           (success 200 "User updated successfully")
-          (error 400 "Failed to update user")))
+          (error 500 "Failed to update user")))
       (error 404 "User not found"))))
 
 ;; Update a user's username
@@ -78,7 +81,7 @@
       (let [result (model/update-user id {:username new-username})]
         (if (= 1 (:next.jdbc/update-count (first result)))
           (success 200 "Username updated successfully")
-          (error 400 "Failed to update username")))
+          (error 500 "Failed to update username")))
       (error 404 "User not found"))))
 
 ;; Update a user's email
@@ -89,7 +92,7 @@
       (let [result (model/update-user id {:email new-email})]
         (if (= 1 (:next.jdbc/update-count (first result)))
           (success 200 "Email updated successfully")
-          (error 400 "Failed to update email")))
+          (error 500 "Failed to update email")))
       (error 404 "User not found"))))
 
 ;; Update a user's password
@@ -100,7 +103,7 @@
       (let [result (model/update-user-password id (hashers/derive new-password))]
         (if (= 1 (:next.jdbc/update-count (first result)))
           (success 200 "Password updated successfully")
-          (error 400 "Failed to update password")))
+          (error 500 "Failed to update password")))
       (error 404 "User not found"))))
 
 ;; Delete a user
@@ -111,7 +114,7 @@
       (let [result (model/delete-user id)]
         (if result
           (success 204 "User deleted successfully")
-          (error 400 "Failed to delete user")))
+          (error 500 "Failed to delete user")))
       (error 404 "User not found"))))
 
 ;; Get roles for a user
@@ -119,8 +122,8 @@
   (log/info "Fetching roles for user ID:" id)
   (let [user (user-exists? id)]
     (if user
-      (work 200 (model/get-roles-for-user id))
-      {:status 404 :error "User not found"})))
+      (work 200 {:roles (model/get-roles-for-user id)})
+      (error 404 "User not found"))))
 
 ;; Add roles to a user
 (defn add-roles-to-user [id roles]
@@ -150,4 +153,4 @@
   (let [user (user-exists? id)]
     (if user
       (work 200 (model/get-permissions-for-user id))
-      {:status 404 :error "User not found"})))
+      (error 404 "User not found"))))

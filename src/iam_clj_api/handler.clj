@@ -25,21 +25,32 @@
     (let [response (handler request)]
       (assoc-in response [:headers "Content-Type"] "application/json"))))
 
+(defn wrap-error-handling [handler]
+  (fn [request]
+    (try
+      (handler request)
+      (catch Exception e
+        (log/error e "Error handling request")
+        {:status 500
+         :body {:error "Internal Server Error"}}))))
+
 (def app
   (-> (routes
        ;; Serve Swagger UI as static files
        (route/resources "/swagger-ui" {:root "swagger-ui"}) ; Serve files from "resources/public/swagger-ui"
        ;; Define API routes
-       (api
-        {:swagger {:ui "/swagger-ui/index.html"
-                   :spec "/swagger.json"
-                   :data {:info {:title "IAM API"
-                                 :description "API for managing users, roles, and permissions"}}}}
-        (context "/api" []
-          (GET "/" [] {:status 200 :body "API is running"})
-          user-view/user-view-routes
-          permission-view/permission-view-routes
-          role-view/role-view-routes)))
+       (-> (api
+            {:swagger {:ui "/swagger-ui/index.html"
+                       :spec "/swagger.json"
+                       :data {:info {:title "IAM API"
+                                     :description "API for managing users, roles, and permissions"}}}}
+            (wrap-error-handling
+              (context "/api" []
+                (GET "/" [] {:status 200 :body "API is running"})
+                user-view/user-view-routes
+                permission-view/permission-view-routes
+                role-view/role-view-routes)))
+           (wrap-json-response)))
       ;; Middleware
       (wrap-resource "public") ; Serve all static files from "resources/public"
       (wrap-cors :access-control-allow-origin [#"http://localhost:3000"]

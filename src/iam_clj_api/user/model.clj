@@ -11,7 +11,8 @@
    :username s/Str
    :email s/Str
    :first_name (s/maybe s/Str)
-   :last_name (s/maybe s/Str)})
+   :last_name (s/maybe s/Str)
+   :created_at s/Inst})
 
 (def ds (get-datasource))
 
