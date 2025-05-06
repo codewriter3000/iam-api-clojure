@@ -9,14 +9,17 @@
 ;; Get all roles
 (defn get-all-roles []
   (log/info "Fetching all roles")
-  (work 200 (model/get-all-roles)))
+  (let [roles (map remove-namespace (model/get-all-roles))
+        result (work 200 {:roles roles})]
+    (log/info "Response: " result)
+    result))
 
 ;; Get a role by ID
 (defn get-role-by-id [id]
   (log/info "Fetching role by ID:" id)
   (let [role (role-exists? id)]
     (if role
-      (work 200 role)
+      (work 200 {:role role})
       (error 404 "Role not found"))))
 
 ;; Get a role by name
@@ -60,7 +63,7 @@
       (let [result (model/update-role id role)]
         (if (= 1 (:update-count result))
           (success 200 "Role updated successfully")
-          (error 400 "Failed to update role"))))
+          (error 500 "Failed to update role"))))
     (error 404 "Role not found")))
 
 ;; Update a role's name

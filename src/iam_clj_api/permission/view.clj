@@ -11,14 +11,14 @@
     ;; Get all permissions
     (GET "/" []
       :summary "Gets all permissions"
-      :responses {200 {:schema {:permissions [{:id Long :name String :description (s/maybe String)}]}
+      :responses {200 {:schema {:permissions [{:id Integer :name String :description (s/maybe String)}]}
                 :description "List of permissions"}}
       (controller/get-all-permissions))
 
     ;; Get a permission by ID
     (GET "/:id" [id]
       :summary "Gets a permission by ID"
-      :responses {200 {:schema {:permission {:id Long :name String :description (s/maybe String)}}
+      :responses {200 {:schema {:permission {:id Integer :name String :description (s/maybe String)}}
                 :description "Permission details"}
                   404 {:description "Permission not found"}}
       (controller/get-permission-by-id id))
@@ -33,7 +33,7 @@
     (PUT "/:id/name" [id new-name]
       :summary "Updates a permission's name"
       :body [name {:name String}]
-      :responses {200 {:schema {:permission {:id Long :name String :description (s/maybe String)}}
+      :responses {200 {:schema {:permission {:id Integer :name String :description (s/maybe String)}}
                 :description "Permission name updated successfully"}
                   404 {:description "Permission not found"}
                   422 {:description "Invalid permission name"}}
@@ -43,7 +43,7 @@
     (PUT "/:id/description" [id new-description]
       :summary "Updates a permission's description"
       :body [description {:description String}]
-      :responses {200 {:schema {:permission {:id Long :name String :description (s/maybe String)}}
+      :responses {200 {:schema {:permission {:id Integer :name String :description (s/maybe String)}}
                 :description "Permission description updated successfully"}
                   404 {:description "Permission not found"}
                   422 {:description "Invalid permission description"}}
@@ -59,15 +59,15 @@
     ;; Get users with a specific permission
     (GET "/:id/user" [id]
       :summary "Gets users with a specific permission"
-      :responses {200 {:schema {:users [{:id Long :username String :email String :first_name (s/maybe String) :last_name (s/maybe String)}]}
+      :responses {200 {:schema {:users [{:id Integer :username String :email String :first_name (s/maybe String) :last_name (s/maybe String)}]}
                 :description "List of users with the permission"}}
       (controller/get-users-with-permission id))
 
     ;; Add a permission to a user
     (POST "/:id/user/:user-id" [id user-id]
       :summary "Adds a permission to a user"
-      :body [permission {:id Long}]
-      :responses {200 {:schema {:permission {:id Long :name String :description (s/maybe String)}}
+      :body [permission {:id Integer}]
+      :responses {200 {:schema {:permission {:id Integer :name String :description (s/maybe String)}}
                 :description "Permission added to user successfully"}
                   404 {:description "User or permission not found"}
                   422 {:description "Invalid permission data"}}
