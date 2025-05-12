@@ -58,7 +58,7 @@
         params [(Integer. id)] ; Ensure id is passed as an Integer
           result (jdbc/execute! ds (into [query] params))]
             (log-query query params)
-            (log/info "Result:" result)
+            (log/info "get-user-by-id Result:" result)
             (if (empty? result)
               nil
               (remove-namespace (first result)))))
@@ -81,13 +81,18 @@
 ;; Update a user
 (defn update-user [id user]
   (if (empty? user)
-    {:update-count 0}
+    (do
+      (log/info "No fields to update for user ID:" id)
+      {:update-count 0})
     (let [filtered-user (filter-nil-values user)
           set-clause (str/join ", " (map (fn [[k _]] (str (name k) " = ?")) filtered-user))
           values (concat (vals filtered-user) [(Integer. id)])
           query (str "UPDATE users SET " set-clause " WHERE id = ?;")]
       (log-query query values)
-      (jdbc/execute! ds (into [query] values)))))
+      (log/info "update-user query about to be ran...")
+      (let [result (jdbc/execute! ds (into [query] values))]
+        (log/info "update-user result:" result)
+        result))))
 
 ;; Update a user's username
 (defn update-user-username [id new-username]

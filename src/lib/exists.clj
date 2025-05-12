@@ -8,7 +8,6 @@
 ;; Helper function to check if a user exists
 (defn user-exists? [id]
   (let [user (user-model/get-user-by-id id)]
-    (log/info "Checking if user exists with ID:" id)
     (if user
       user
       nil)))

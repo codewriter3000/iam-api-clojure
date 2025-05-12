@@ -31,8 +31,8 @@ You will need [Leiningen][] 2.0.0 or above installed.
 
 To start a web server for the application, run:
 
-    lein ring server
+    lein run
 
 ## License
 
-Copyright © 2024 FIXME
+Copyright © 2025 FIXME
