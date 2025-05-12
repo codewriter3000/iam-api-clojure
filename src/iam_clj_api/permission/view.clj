@@ -1,7 +1,6 @@
 (ns iam-clj-api.permission.view
   (:require [compojure.api.sweet :refer :all]
             [compojure.route :as route]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [iam-clj-api.permission.controller :as controller]
             [schema.core :as s]))
 

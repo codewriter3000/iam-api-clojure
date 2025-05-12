@@ -1,7 +1,6 @@
 (ns iam-clj-api.role.view
   (:require [compojure.api.sweet :refer :all]
             [compojure.route :as route]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [iam-clj-api.role.controller :as controller]
             [ring.util.request :as request]
             [schema.core :as s]))

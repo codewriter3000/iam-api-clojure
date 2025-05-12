@@ -3,7 +3,8 @@
             [iam-clj-api.user.controller :as controller]
             [ring.middleware.json :as json]
             [ring.util.request :as request]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [clojure.tools.logging :as log]))
 
 (defroutes user-view-routes
   (context "/user" []
@@ -42,15 +43,17 @@
       (controller/login-user username password))
 
     ;; Update a user
-    (PUT "/:id" request
+    (PUT "/:id" [id]
       :summary "Updates a user"
-      :body [user {:username (s/maybe String) :email (s/maybe String) :first_name (s/maybe String) :last_name (s/maybe String)}]
-      :responses {200 {:schema {:user {:id Integer :username String :email String :first_name (s/maybe String) :last_name (s/maybe String) :created_at s/Inst}}
-                :description "User updated successfully"}
-                  404 {:description "User not found"}
-                  500 {:description "Failed to update user"}}
-      (let [id (get-in request [:params :id])
-            user (get-in request [:body])]
+      :body [user {(s/optional-key :username) String
+                   (s/optional-key :email) String
+                   (s/optional-key :first_name) String
+                   (s/optional-key :last_name) String}]
+      :responses {200 {:schema {:user {:id Integer :username String :email String :first_name (s/maybe String) :last_name (s/maybe String) :created_at s/Inst}}}
+                  404 {:schema {:error String}}
+                  500 {:schema {:error String}}}
+      (do
+        (log/info "Updating user with ID:" id "Data:" user)
         (controller/update-user id user)))
 
     ;; Update a user's password
@@ -59,16 +62,16 @@
       :body [password {:password String}]
       :responses {200 {:schema {:user {:id Integer :username String :email String :first_name (s/maybe String) :last_name (s/maybe String) :created_at s/Inst}}
                 :description "Password updated successfully"}
-                  404 {:description "User not found"}
-                  500 {:description "Failed to update password"}}
+                  404 {:schema {:error String}}
+                  500 {:schema {:error String}}}
       (controller/update-user-password id new-password))
 
     ;; Delete a user
     (DELETE "/:id" [id]
       :summary "Deletes a user"
-      :responses {204 {:description "User deleted successfully"}
-                  404 {:description "User not found"}
-                  500 {:description "Failed to delete user"}}
+      :responses {204 {:schema {:message String}}
+                  404 {:schema {:error String}}
+                  500 {:schema {:error String}}}
       (controller/delete-user id))
 
     ;; Get permissions for a user
@@ -90,10 +93,13 @@
     ;; Add roles to a user
     (POST "/:id/roles" request
       :summary "Adds roles to a user"
+      :body [roles [{:id Integer :name String :description (s/maybe String)}]]
       :responses {200 {:schema {:user {:id Integer :username String :email String :first_name (s/maybe String) :last_name (s/maybe String)}}
                 :description "Roles added successfully"}
-                  404 {:description "User not found"}
-                  422 {:description "Invalid roles"}}
+                  400 {:schema {:error String}}
+                  404 {:schema {:error String}}
+                  422 {:schema {:error String}}
+                  500 {:schema {:error String}}}
       (let [id (get-in request [:params :id])
             roles (get-in request [:body :roles])]
         (controller/add-roles-to-user id roles)))
@@ -103,8 +109,8 @@
       :summary "Removes roles from a user"
       :responses {204 {:schema {:user {:id Integer :username String :email String :first_name (s/maybe String) :last_name (s/maybe String)}}
                 :description "Roles removed successfully"}
-                  404 {:description "User not found"}
-                  422 {:description "Invalid roles"}}
+                  404 {:schema {:error String}}
+                  500 {:schema {:error String}}}
       (let [id (get-in request [:params :id])
             roles (get-in request [:body :roles])]
         (controller/remove-roles-from-user id roles)))))

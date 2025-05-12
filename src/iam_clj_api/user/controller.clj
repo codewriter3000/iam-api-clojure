@@ -66,11 +66,17 @@
 (defn update-user [id user]
   (log/info "Updating user with ID:" id "Data:" user)
   (let [existing-user (user-exists? id)]
+    (log/info "User exists:" existing-user)
     (if existing-user
-      (let [result (model/update-user id user)]
-        (if (= 1 (:update-count result))
-          (success 200 "User updated successfully")
-          (error 500 "Failed to update user")))
+      (do
+        (log/info "User found:" existing-user)
+        (let [result (model/update-user id user)]
+          (log/info "Update result:" (:next.jdbc/update-count (first result)))
+          (if (= 1 (:next.jdbc/update-count (first result)))
+            (let [updated-user (merge existing-user user)] ; Merge existing and updated fields
+              (log/info "Updated user:" updated-user)
+              (work 200 {:user updated-user}))
+            (error 500 "Failed to update user"))))
       (error 404 "User not found"))))
 
 ;; Update a user's username
@@ -128,13 +134,19 @@
 ;; Add roles to a user
 (defn add-roles-to-user [id roles]
   (log/info "Adding roles to user ID:" id "Roles:" roles)
-  (let [user (user-exists? id)]
-    (if user
-      (let [results (map #(role-model/add-role-to-user % id) roles)
-            success-count (count (filter #(= 1 (:update-count %)) results))
-            failure-count (- (count roles) success-count)]
-        (success 200 {:success-count success-count :failure-count failure-count}))
-      (error 404 "User not found"))))
+  (if (empty? roles)
+    (do
+      (log/info "No roles provided")
+      (error 400 "No roles provided"))
+    (do
+      (log/info "Roles provided:" roles)
+      (let [user (user-exists? id)]
+        (if user
+          (let [results (map #(role-model/add-role-to-user % id) roles)
+                success-count (count (filter #(= 1 (:update-count %)) results))
+                failure-count (- (count roles) success-count)]
+            (success 200 {:success-count success-count :failure-count failure-count}))
+          (error 404 "User not found"))))))
 
 ;; Remove roles from a user
 (defn remove-roles-from-user [id roles]
