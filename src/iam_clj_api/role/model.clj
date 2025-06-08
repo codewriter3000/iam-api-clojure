@@ -3,6 +3,7 @@
             [lib.core :refer :all]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
+            [clojure.set :as clojure.set]
             [schema.core :as s]))
 
 ;; Role Schema
@@ -58,16 +59,16 @@
   (let [query "SELECT id, name, description FROM roles;"
         result (jdbc/execute! ds [query])]
     (log-query query [])
-    (if (empty? result)
-      nil
-      (map remove-namespace (map #(into {} %) result)))))
+    (map remove-namespace (map #(into {} %) result))))
 
 ;; Get a role by ID
 (defn get-role-by-id [id]
+  (log/info "Fetching role by ID:" (type id))
   (let [query "SELECT id, name, description FROM roles WHERE id = ?;"
-        params [id]
+        params [(Integer. id)]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
+    (log/info "get-role-by-id Result:" result)
     (if (empty? result)
       nil
       (remove-namespace (first result)))))
@@ -97,15 +98,15 @@
 (defn delete-role [id]
   (let [query "DELETE FROM roles WHERE id = ?;"
         params [(Integer. id)]]
-          (log-query query params)
-          (try
-            (jdbc/execute! ds (into [query] params))
-            (do
-            (log/info "Role deleted successfully for ID:" id)
-            {:delete-count 1}) ; Return success if the query executes
-            (catch Exception e
-            (log/error e "Failed to delete role for ID:" id)
-            {:delete-count 0})))) ; Return failure if an exception occurs
+    (log-query query params)
+    (try
+      (jdbc/execute! ds (into [query] params))
+      (do
+        (log/info "Role deleted successfully for ID:" id)
+        {:delete-count 1}) ; Return success if the query executes
+      (catch Exception e
+        (log/error e "Failed to delete role for ID:" id)
+        {:delete-count 0})))) ; Return failure if an exception occurs
 
 ;; Get users with a specific role
 (defn get-users-with-role [id]
@@ -127,6 +128,20 @@
     (log-query query params)
     (jdbc/execute! ds (into [query] params))))
 
+(defn add-role-to-users [role-id user-ids]
+  (log/info "add-role-to-users role-id:" role-id "user-ids:" user-ids "types:" (map type user-ids))
+  (let [query  "INSERT INTO users_roles (role_id, user_id) VALUES (?, ?);"
+        _ (log/info "Query type:" (type query))
+        params (mapv #(vector (Integer. (str role-id)) (Integer. (str %))) user-ids)]
+    (log-query query params)
+    (jdbc/execute-batch! ds query params {:reWriteBatchedInserts true})))
+
+(defn remove-role-from-users [role-id user-ids]
+  (let [query "DELETE FROM users_roles WHERE role_id = ? AND user_id = ?;"
+        params (mapv #(vector (Integer. role-id) (Integer. %)) user-ids)]
+    (log-query query params)
+    (jdbc/execute-batch! ds query params {:reWriteBatchedInserts true})))
+
 ;; Remove a role from a user
 (defn remove-role-from-user [role-id user-id]
   (let [query "DELETE FROM users_roles WHERE role_id = ? AND user_id = ?;"
@@ -135,6 +150,20 @@
     (let [result (jdbc/execute! ds (into [query] params))]
       (log/info "Query result:" result)
       result)))
+
+;; Utility function to sync role users
+(defn sync-role-users [role-id target-user-ids]
+  (let [current-users (set (map :id (get-users-with-role role-id)))
+        ;; Defensive: only accept maps with :id, ignore anything else
+        target-users (set (keep #(when (map? %) (int (:id %))) target-user-ids))
+        to-add (clojure.set/difference target-users current-users)
+        to-remove (clojure.set/difference current-users target-users)]
+    (log/info "sync-role-users to-add:" to-add "to-remove:" to-remove)
+    (when (seq to-add)
+      (add-role-to-users role-id (vec to-add)))
+    (when (seq to-remove)
+      (remove-role-from-users role-id (vec to-remove)))
+    {:added to-add :removed to-remove}))
 
 ;; Get permissions for a role
 (defn get-permissions-for-role [id]

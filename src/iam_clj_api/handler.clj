@@ -7,6 +7,7 @@
             [ring.middleware.keyword-params :as keyword-params]
             [ring.middleware.json :refer [wrap-json-body]]
             [ring.middleware.resource :refer [wrap-resource]]
+            [ring.middleware.reload :refer [wrap-reload]]
             [iam-clj-api.user.view :as user-view]
             [iam-clj-api.permission.view :as permission-view]
             [iam-clj-api.role.view :as role-view]
@@ -73,9 +74,10 @@
            (start [component]
              (log/info "Starting HTTP server")
              (let [handler (-> app
-                               (keyword-params/wrap-keyword-params)
-                               (params/wrap-params)
-                               (wrap-custom-middleware))
+                               wrap-reload
+                               keyword-params/wrap-keyword-params
+                               params/wrap-params
+                               wrap-custom-middleware)
                    server (jetty/run-jetty handler {:port 8080 :join? false})]
                (assoc component :server server)))
 

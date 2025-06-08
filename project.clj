@@ -14,6 +14,8 @@
                  [org.ring-clojure/ring-websocket-middleware "0.2.1"]
                  [ring/ring-json "0.5.1"]
                  [ring-cors/ring-cors "0.1.9"]
+                 [ring/ring-devel "1.14.1"]
+                 [instaparse "1.5.0"]
                  ; DB
                  [com.github.seancorfield/next.jdbc "1.3.939"]
                  [org.postgresql/postgresql "42.7.4"]

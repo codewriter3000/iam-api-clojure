@@ -19,8 +19,10 @@
   (log/info "Fetching role by ID:" id)
   (let [role (role-exists? id)]
     (if role
-      (work 200 {:role role})
-      (error 404 "Role not found"))))
+      (let [users (model/get-users-with-role id)]
+        (log/info "Users with role ID:" id "are:" users)
+        (work 200 {:role (assoc role :users users)}))
+            (error 404 "Role not found"))))
 
 ;; Get a role by name
 (defn get-role-by-name [name]
@@ -60,10 +62,19 @@
   (if (role-exists? id)
     (if (empty? role)
       (error 400 "Missing role data")
-      (let [result (model/update-role id role)]
-        (if (= 1 (:update-count result))
-          (success 200 "Role updated successfully")
-          (error 500 "Failed to update role"))))
+      (let [basic-info-result (model/update-role id (dissoc role :users))
+            users-result (model/sync-role-users id (:users role))]
+        (if (and (= 1 (:next.jdbc/update-count (first basic-info-result)))
+                  (map? users-result)
+                  (contains? users-result :added)
+                  (contains? users-result :removed)
+                  (set? (:added users-result))
+                  (set? (:removed users-result)))
+          (do (log/info "Updated role: " {:role (assoc role :id (Integer. id))})
+          (work 200 {:role (assoc role :id (Integer. id))}))
+          (do (log/info "Basic Info Result: " (:next.jdbc/update-count (first basic-info-result)))
+              (log/info "Users Result: " users-result)
+              (error 500 "Failed to update role")))))
     (error 404 "Role not found")))
 
 ;; Update a role's name
