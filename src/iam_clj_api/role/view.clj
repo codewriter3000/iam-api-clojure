@@ -35,10 +35,11 @@
     (POST "/" request
       :summary "Creates a new role"
       :body [role {:name String :description (s/maybe String)}]
-      :responses {201 {:schema {:role {:id Integer :name String :description (s/maybe String)}}
-                       :description "Role created successfully"}
+      :responses {201 {:description "Role created successfully"}
                   422 {:description "Invalid role data"}}
-      (controller/insert-role (get-in request [:body])))
+      (let [role (get-in request [:body-params])]
+        (log/info "Creating new role with data:" role)
+        (controller/insert-role role)))
 
     ;; Update a role
     (PUT "/:id" [id :as {body :body}]
