@@ -176,7 +176,7 @@
 (defn get-permissions-for-role [id]
   (log/info "Fetching permissions for role ID:" id)
   (if (role-exists? id)
-    (work 200 (model/get-permissions-for-role id))
+    (work 200 {:permissions (model/get-permissions-for-role id)})
     (error 404 "Role not found")))
 
 ;; Add a permission to a role

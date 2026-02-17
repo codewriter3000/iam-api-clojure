@@ -164,5 +164,5 @@
   (log/info "Fetching permissions for user ID:" id)
   (let [user (user-exists? id)]
     (if user
-      (work 200 (model/get-permissions-for-user id))
+      (work 200 {:permissions (model/get-permissions-for-user id)})
       (error 404 "User not found"))))

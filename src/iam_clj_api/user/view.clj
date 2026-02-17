@@ -91,26 +91,23 @@
       (controller/get-roles-for-user id))
 
     ;; Add roles to a user
-    (POST "/:id/roles" request
+    (POST "/:id/roles" [id]
       :summary "Adds roles to a user"
-      :body [roles [{:id Integer :name String :description (s/maybe String)}]]
-      :responses {200 {:schema {:user {:id Integer :username String :email String :first_name (s/maybe String) :last_name (s/maybe String)}}
+      :body [payload {:roles [Integer]}]
+      :responses {200 {:schema {:message {:success-count Integer :failure-count Integer}}
                 :description "Roles added successfully"}
                   400 {:schema {:error String}}
                   404 {:schema {:error String}}
                   422 {:schema {:error String}}
                   500 {:schema {:error String}}}
-      (let [id (get-in request [:params :id])
-            roles (get-in request [:body :roles])]
-        (controller/add-roles-to-user id roles)))
+      (controller/add-roles-to-user id (:roles payload)))
 
     ;; Remove roles from a user
-    (DELETE "/:id/roles" request
+    (DELETE "/:id/roles" [id]
       :summary "Removes roles from a user"
-      :responses {204 {:schema {:user {:id Integer :username String :email String :first_name (s/maybe String) :last_name (s/maybe String)}}
+      :body [payload {:roles [Integer]}]
+      :responses {200 {:schema {:message {:success-count Integer :failure-count Integer}}
                 :description "Roles removed successfully"}
                   404 {:schema {:error String}}
                   500 {:schema {:error String}}}
-      (let [id (get-in request [:params :id])
-            roles (get-in request [:body :roles])]
-        (controller/remove-roles-from-user id roles)))))
+      (controller/remove-roles-from-user id (:roles payload)))))

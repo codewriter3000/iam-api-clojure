@@ -21,6 +21,14 @@
                 :description "Permission details"}
                   404 {:description "Permission not found"}}
       (controller/get-permission-by-id id))
+    
+    ;; Get a permission by name
+    (GET "/name/:name" [name]
+      :summary "Gets a permission by name"
+      :responses {200 {:schema {:permission {:id Integer :name String :description (s/maybe String)}}
+                :description "Permission details"}
+                  404 {:description "Permission not found"}}
+      (controller/get-permission-by-name name))
 
     ;; Create a new permission
     (POST "/" [name description]
@@ -65,7 +73,6 @@
     ;; Add a permission to a user
     (POST "/:id/user/:user-id" [id user-id]
       :summary "Adds a permission to a user"
-      :body [permission {:id Integer}]
       :responses {200 {:schema {:permission {:id Integer :name String :description (s/maybe String)}}
                 :description "Permission added to user successfully"}
                   404 {:description "User or permission not found"}

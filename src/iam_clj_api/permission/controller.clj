@@ -5,17 +5,33 @@
             [lib.response :refer [error success work]]
             [lib.exists :refer [permission-exists? user-exists?]]))
 
+(defn- parse-id [id]
+  (try
+    (if (integer? id)
+      id
+      (Integer/parseInt (str id)))
+    (catch Exception _
+      nil)))
+
 ;; Get all permissions
 (defn get-all-permissions []
   (log/info "Fetching all permissions")
-  (work 200 (model/get-all-permissions)))
+  (work 200 {:permissions (model/get-all-permissions)}))
 
 ;; Get a permission by ID
 (defn get-permission-by-id [id]
   (log/info "Fetching permission by ID:" id)
   (let [permission (permission-exists? id)]
     (if permission
-      (work 200 permission)
+      (work 200 {:permission permission})
+      (error 404 "Permission not found"))))
+
+;; Get a permission by name
+(defn get-permission-by-name [name]
+  (log/info "Fetching permission by name:" name)
+  (let [permission (model/get-permission-by-name name)]
+    (if permission
+      (work 200 {:permission permission})
       (error 404 "Permission not found"))))
 
 ;; Validate permission input
@@ -71,29 +87,47 @@
 (defn get-users-with-permission [id]
   (log/info "Fetching users with permission ID:" id)
   (if-let [permission (permission-exists? id)]
-    (work 200 (model/get-users-with-permission id))
+    (work 200 {:user (model/get-users-with-permission id)})
     (error 404 "Permission not found")))
 
 ;; Add a permission to a user
 (defn add-permission-to-user [id user-id]
   (log/info "Adding permission ID:" id "to user ID:" user-id)
-  (if (permission-exists? id)
-    (if (user-exists? user-id)
-      (let [result (model/add-permission-to-user id user-id)]
+  (let [permission-id (parse-id id)
+        target-user-id (parse-id user-id)]
+    (cond
+      (or (nil? permission-id) (nil? target-user-id))
+      (error 400 "Invalid permission ID or user ID")
+
+      (not (permission-exists? permission-id))
+      (error 404 "Permission not found")
+
+      (not (user-exists? target-user-id))
+      (error 404 "User not found")
+
+      :else
+      (let [result (model/add-permission-to-user permission-id target-user-id)]
         (if (= 1 (:insert-count result))
           (success 201 "Permission added to user")
-          (error 400 "Failed to add permission to user")))
-      (error 404 "User not found"))
-    (error 404 "Permission not found")))
+          (error 400 "Failed to add permission to user"))))))
 
 ;; Remove a permission from a user
 (defn remove-permission-from-user [id user-id]
   (log/info "Removing permission ID:" id "from user ID:" user-id)
-  (if-let [permission (permission-exists? id)]
-    (if (user-exists? user-id)
-      (let [result (model/remove-permission-from-user id user-id)]
+  (let [permission-id (parse-id id)
+        target-user-id (parse-id user-id)]
+    (cond
+      (or (nil? permission-id) (nil? target-user-id))
+      (error 400 "Invalid permission ID or user ID")
+
+      (not (permission-exists? permission-id))
+      (error 404 "Permission not found")
+
+      (not (user-exists? target-user-id))
+      (error 404 "User not found")
+
+      :else
+      (let [result (model/remove-permission-from-user permission-id target-user-id)]
         (if (= 1 (:delete-count result))
           (success 204 "Permission removed from user")
-          (error 400 "Failed to remove permission from user")))
-      (error 404 "User not found"))
-    (error 404 "Permission not found")))
+          (error 400 "Failed to remove permission from user"))))))

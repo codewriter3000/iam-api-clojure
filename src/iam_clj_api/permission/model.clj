@@ -12,6 +12,14 @@
 
 (def ds (get-datasource))
 
+(defn- as-int [value]
+  (try
+    (if (integer? value)
+      value
+      (Integer/parseInt (str value)))
+    (catch Exception _
+      nil)))
+
 ;; Helper function to log queries
 (defn- log-query [query params]
   (log/info "Executing query:" query "with params:" params))
@@ -49,14 +57,12 @@
   (let [query "SELECT id, name, description FROM permissions;"
         result (jdbc/execute! ds [query])]
     (log-query query [])
-    (if (empty? result)
-      nil
-      (map remove-namespace (map #(into {} %) result)))))
+      (map remove-namespace (map #(into {} %) result))))
 
 ;; Get a permission by ID
 (defn get-permission-by-id [id]
   (let [query "SELECT id, name, description FROM permissions WHERE id = ?;"
-        params [id]
+  params [(as-int id)]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
     (if (empty? result)
@@ -76,7 +82,7 @@
 ;; Update a permission's name
 (defn update-permission-name [id new-name]
   (let [query "UPDATE permissions SET name = ? WHERE id = ?;"
-        params [new-name id]
+  params [new-name (as-int id)]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
     {:update-count (:next.jdbc/update-count (first result))}))
@@ -84,7 +90,7 @@
 ;; Update a permission's description
 (defn update-permission-description [id new-description]
   (let [query "UPDATE permissions SET description = ? WHERE id = ?;"
-        params [new-description id]
+  params [new-description (as-int id)]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
     {:update-count (:next.jdbc/update-count (first result))}))
@@ -92,7 +98,7 @@
 ;; Delete a permission
 (defn delete-permission [id]
   (let [query "DELETE FROM permissions WHERE id = ?;"
-        params [id]
+  params [(as-int id)]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
     {:delete-count (:next.jdbc/update-count (first result))}))
@@ -103,24 +109,22 @@
                FROM users u
                JOIN users_permissions up ON u.id = up.user_id
                WHERE up.permission_id = ?;"
-        params [id]
+        params [(as-int id)]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
     (log-result result)
-    (if (empty? result)
-      nil
-      (map remove-namespace (map #(into {} %) result)))))
+    (map remove-namespace (map #(into {} %) result))))
 
 ;; Add a permission to a user
 (defn add-permission-to-user [id user-id]
   (let [query "INSERT INTO users_permissions (user_id, permission_id) VALUES (?, ?);"
-        params [user-id id]]
+  params [(as-int user-id) (as-int id)]]
     (log-query query params)
     (jdbc/execute! ds (into [query] params))))
 
 ;; Remove a permission from a user
 (defn remove-permission-from-user [id user-id]
   (let [query "DELETE FROM users_permissions WHERE user_id = ? AND permission_id = ?;"
-        params [user-id id]]
+  params [(as-int user-id) (as-int id)]]
     (log-query query params)
     (jdbc/execute! ds (into [query] params))))
