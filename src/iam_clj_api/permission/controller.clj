@@ -87,7 +87,7 @@
 (defn get-users-with-permission [id]
   (log/info "Fetching users with permission ID:" id)
   (if-let [permission (permission-exists? id)]
-    (work 200 {:user (model/get-users-with-permission id)})
+    (work 200 {:users (model/get-users-with-permission id)})
     (error 404 "Permission not found")))
 
 ;; Add a permission to a user

@@ -1,8 +1,7 @@
 (ns iam-clj-api.permission.view
   (:require [compojure.api.sweet :refer :all]
-            [compojure.route :as route]
             [iam-clj-api.permission.controller :as controller]
-            [schema.core :as s]))
+            [iam-clj-api.schemas :as schemas]))
 
 (defroutes permission-view-routes
   (context "/permission" []
@@ -10,78 +9,92 @@
     ;; Get all permissions
     (GET "/" []
       :summary "Gets all permissions"
-      :responses {200 {:schema {:permissions [{:id Integer :name String :description (s/maybe String)}]}
+      :responses {200 {:schema schemas/PermissionsResponse
                 :description "List of permissions"}}
       (controller/get-all-permissions))
 
     ;; Get a permission by ID
     (GET "/:id" [id]
       :summary "Gets a permission by ID"
-      :responses {200 {:schema {:permission {:id Integer :name String :description (s/maybe String)}}
+      :responses {200 {:schema schemas/PermissionResponse
                 :description "Permission details"}
-                  404 {:description "Permission not found"}}
+                  404 {:schema schemas/ErrorResponse
+                       :description "Permission not found"}}
       (controller/get-permission-by-id id))
     
     ;; Get a permission by name
     (GET "/name/:name" [name]
       :summary "Gets a permission by name"
-      :responses {200 {:schema {:permission {:id Integer :name String :description (s/maybe String)}}
+      :responses {200 {:schema schemas/PermissionResponse
                 :description "Permission details"}
-                  404 {:description "Permission not found"}}
+                  404 {:schema schemas/ErrorResponse
+                       :description "Permission not found"}}
       (controller/get-permission-by-name name))
 
     ;; Create a new permission
-    (POST "/" [name description]
+    (POST "/" [permission]
       :summary "Creates a new permission"
-      :body [permission {:name String :description (s/maybe String)}]
-      (controller/insert-permission name description))
+      :body [permission schemas/CreatePermissionRequest]
+      :responses {201 {:schema schemas/MessageResponse}
+                  400 {:schema schemas/ErrorResponse}}
+      (controller/insert-permission (:name permission) (:description permission)))
 
     ;; Update a permission's name
-    (PUT "/:id/name" [id new-name]
+    (PUT "/:id/name" [id name]
       :summary "Updates a permission's name"
-      :body [name {:name String}]
-      :responses {200 {:schema {:permission {:id Integer :name String :description (s/maybe String)}}
+      :body [name schemas/NamePayload]
+      :responses {200 {:schema schemas/MessageResponse
                 :description "Permission name updated successfully"}
-                  404 {:description "Permission not found"}
-                  422 {:description "Invalid permission name"}}
-      (controller/update-permission-name id new-name))
+                  404 {:schema schemas/ErrorResponse
+                       :description "Permission not found"}
+                  422 {:schema schemas/ErrorResponse
+                       :description "Invalid permission name"}}
+      (controller/update-permission-name id (:name name)))
 
     ;; Update a permission's description
-    (PUT "/:id/description" [id new-description]
+    (PUT "/:id/description" [id description]
       :summary "Updates a permission's description"
-      :body [description {:description String}]
-      :responses {200 {:schema {:permission {:id Integer :name String :description (s/maybe String)}}
+      :body [description schemas/DescriptionPayload]
+      :responses {200 {:schema schemas/MessageResponse
                 :description "Permission description updated successfully"}
-                  404 {:description "Permission not found"}
-                  422 {:description "Invalid permission description"}}
-      (controller/update-permission-description id new-description))
+                  404 {:schema schemas/ErrorResponse
+                       :description "Permission not found"}
+                  422 {:schema schemas/ErrorResponse
+                       :description "Invalid permission description"}}
+      (controller/update-permission-description id (:description description)))
 
     ;; Delete a permission
     (DELETE "/:id" [id]
       :summary "Deletes a permission"
-      :responses {204 {:description "Permission deleted successfully"}
-                  404 {:description "Permission not found"}}
+       :responses {204 {:schema schemas/MessageResponse
+               :description "Permission deleted successfully"}
+             404 {:schema schemas/ErrorResponse
+               :description "Permission not found"}}
       (controller/delete-permission id))
 
     ;; Get users with a specific permission
     (GET "/:id/user" [id]
       :summary "Gets users with a specific permission"
-      :responses {200 {:schema {:users [{:id Integer :username String :email String :first_name (s/maybe String) :last_name (s/maybe String)}]}
+      :responses {200 {:schema schemas/UsersResponse
                 :description "List of users with the permission"}}
       (controller/get-users-with-permission id))
 
     ;; Add a permission to a user
     (POST "/:id/user/:user-id" [id user-id]
       :summary "Adds a permission to a user"
-      :responses {200 {:schema {:permission {:id Integer :name String :description (s/maybe String)}}
-                :description "Permission added to user successfully"}
-                  404 {:description "User or permission not found"}
-                  422 {:description "Invalid permission data"}}
+       :responses {201 {:schema schemas/MessageResponse
+               :description "Permission added to user successfully"}
+             404 {:schema schemas/ErrorResponse
+               :description "User or permission not found"}
+             422 {:schema schemas/ErrorResponse
+               :description "Invalid permission data"}}
       (controller/add-permission-to-user id user-id))
 
     ;; Remove a permission from a user
     (DELETE "/:id/user/:user-id" [id user-id]
       :summary "Removes a permission from a user"
-      :responses {204 {:description "Permission removed from user successfully"}
-                  404 {:description "User or permission not found"}}
+       :responses {204 {:schema schemas/MessageResponse
+               :description "Permission removed from user successfully"}
+             404 {:schema schemas/ErrorResponse
+               :description "User or permission not found"}}
       (controller/remove-permission-from-user id user-id))))

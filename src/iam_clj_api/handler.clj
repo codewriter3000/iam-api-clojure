@@ -55,15 +55,15 @@
                        :spec "/swagger.json"
                        :data {:info {:title "IAM API"
                                      :description "API for managing users, roles, and permissions"}}}}
-            (wrap-error-handling
-             (context "/api" []
-               (GET "/" [] {:status 200 :body "API is running"})
-               user-view/user-view-routes
-               permission-view/permission-view-routes
-               role-view/role-view-routes)))
+            (context "/api" []
+              (GET "/" [] {:status 200 :body "API is running"})
+              user-view/user-view-routes
+              permission-view/permission-view-routes
+              role-view/role-view-routes))
            (wrap-json-response)))
       ;; Middleware
       (wrap-resource "public") ; Serve all static files from "resources/public"
+      wrap-error-handling
       (wrap-cors :access-control-allow-origin [#"http://localhost:3000"]
                  :access-control-allow-methods [:get :put :post :delete]
                  :access-control-allow-headers ["Content-Type" "Authorization"])

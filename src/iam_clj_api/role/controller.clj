@@ -29,7 +29,7 @@
   (log/info "Fetching role by name:" name)
   (let [role (model/get-role-by-name name)]
     (if role
-      (work 200 role)
+      (work 200 {:role role})
       (error 404 "Role not found"))))
 
 ;; Validate role input
@@ -120,7 +120,7 @@
       (log/info "Users with role ID:" id "are:" users)
       (if (nil? users)
         (error 404 "No users found with the given role")
-        (work 200 users)))
+        (work 200 {:users users})))
   (error 404 "Role not found")))
 
 ;; Add a role to a user
@@ -192,7 +192,7 @@
     (error 404 "Role not found"))) ; Return role not found if the role doesn't exist
 
 ;; Remove a permission from a role
-(defn remove-permission-from-role [permission-id role-id]
+(defn remove-permission-from-role [role-id permission-id]
   (log/info "Removing permission ID:" permission-id "from role ID:" role-id)
   (if (role-exists? role-id)
     (if (permission-exists? permission-id)
