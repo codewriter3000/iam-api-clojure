@@ -34,6 +34,9 @@
                     first_name VARCHAR(32),
                     last_name VARCHAR(32),
                     password VARCHAR(256) NOT NULL,
+                    reset_token_hash VARCHAR(256),
+                    reset_token_expires_at TIMESTAMP,
+                    reset_token_used_at TIMESTAMP,
                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                   );"]))
 
@@ -76,7 +79,24 @@
         params [username]
         result (jdbc/execute! ds (into [query] params))]
     (log-query query params)
-    (remove-namespace (first result))))
+    (if (empty? result)
+      nil
+      (remove-namespace (first result)))))
+
+;; Get a user by email
+(defn get-user-by-email [email]
+  (let [query "SELECT * FROM users WHERE email = ?;"
+        params [email]
+        result (jdbc/execute! ds (into [query] params))]
+    (log-query query params)
+    (if (empty? result)
+      nil
+      (remove-namespace (first result)))))
+
+;; Get a user by login id (username or email)
+(defn get-user-by-login-id [login-id]
+  (or (get-user-by-username login-id)
+      (get-user-by-email login-id)))
 
 ;; Update a user
 (defn update-user [id user]
@@ -112,6 +132,38 @@
 (defn update-user-password [id new-password]
   (let [query "UPDATE users SET password = ? WHERE id = ?;"
         params [new-password (Integer. id)]]
+    (log-query query params)
+    (jdbc/execute! ds (into [query] params))))
+
+;; Set password reset token and expiry
+(defn set-password-reset-token [id token-hash expires-at]
+  (let [query "UPDATE users
+               SET reset_token_hash = ?, reset_token_expires_at = ?, reset_token_used_at = NULL
+               WHERE id = ?;"
+        params [token-hash expires-at (Integer. id)]]
+    (log-query query params)
+    (jdbc/execute! ds (into [query] params))))
+
+;; Get user by valid, unused reset token hash
+(defn get-user-by-reset-token-hash [token-hash]
+  (let [query "SELECT *
+               FROM users
+               WHERE reset_token_hash = ?
+                 AND reset_token_used_at IS NULL
+                 AND reset_token_expires_at > CURRENT_TIMESTAMP;"
+        params [token-hash]
+        result (jdbc/execute! ds (into [query] params))]
+    (log-query query params)
+    (remove-namespace (first result))))
+
+;; Consume password reset token
+(defn consume-password-reset-token [id]
+  (let [query "UPDATE users
+               SET reset_token_hash = NULL,
+                   reset_token_expires_at = NULL,
+                   reset_token_used_at = CURRENT_TIMESTAMP
+               WHERE id = ?;"
+        params [(Integer. id)]]
     (log-query query params)
     (jdbc/execute! ds (into [query] params))))
 

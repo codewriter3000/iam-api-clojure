@@ -42,7 +42,15 @@
 (s/defschema CountPayload {:success-count Integer :failure-count Integer})
 (s/defschema CountMessageResponse {:message CountPayload})
 
-(s/defschema LoginRequest {:username String :password String})
+(s/defschema LoginRequest {:login_id String :password String})
+(s/defschema LoginResponse
+  {:message String
+   :user {:id Integer :username String :email String}})
+(s/defschema ForgotPasswordRequest {:login_id String})
+(s/defschema ForgotPasswordResponse
+  {:message String
+   (s/optional-key :reset_url) String})
+(s/defschema ResetPasswordRequest {:token String :password String})
 (s/defschema UpdateUserRequest
   {(s/optional-key :username) String
    (s/optional-key :email) String

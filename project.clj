@@ -21,6 +21,7 @@
                  [org.postgresql/postgresql "42.7.4"]
 
                  [buddy/buddy-hashers "1.4.0"]
+                 [com.sun.mail/jakarta.mail "2.0.1"]
                  [environ "1.2.0"]
                  ; Logging
                  [org.clojure/tools.logging "1.3.0"]

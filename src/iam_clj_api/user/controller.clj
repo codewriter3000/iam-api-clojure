@@ -3,9 +3,28 @@
             [iam-clj-api.user.model :as model]
             [iam-clj-api.role.model :as role-model]
             [buddy.hashers :as hashers]
+            [clojure.string :as str]
             [clojure.tools.logging :as log]
             [lib.response :refer [error success work]]
             [lib.exists :refer [user-exists?]]))
+
+(defn- sha256 [value]
+  (let [digest (.digest (java.security.MessageDigest/getInstance "SHA-256")
+                        (.getBytes value "UTF-8"))]
+    (format "%064x" (java.math.BigInteger. 1 digest))))
+
+(defn- now-plus-minutes [minutes]
+  (java.sql.Timestamp. (+ (System/currentTimeMillis) (* minutes 60 1000))))
+
+(defn- frontend-base-url []
+  (or (System/getenv "FRONTEND_BASE_URL")
+      "http://localhost:3000"))
+
+(defn- build-reset-url [token]
+  (str (frontend-base-url) "/reset-password?token=" token))
+
+(defn- reset-generic-response []
+  (success 200 "If the account exists, a password reset link has been sent"))
 
 ;; Validate user input
 (defn validate-input [user]
@@ -39,12 +58,54 @@
         (success 201 "User created successfully"))))) ; Pass the success message directly as a string
 
 ;; Login a user
-(defn login-user [username password]
-  (log/info "Logging in user:" username)
-  (let [user (model/get-user-by-username username)]
+(defn login-user [login-id password]
+  (log/info "Logging in user:" login-id)
+  (let [user (model/get-user-by-login-id login-id)]
     (if (and user (hashers/check password (get user :password)))
-      (success 200 "Login successful")
+      (work 200 {:message "Login successful"
+                 :user {:id (:id user)
+                        :username (:username user)
+                        :email (:email user)}})
       (error 401 "Invalid username or password"))))
+
+(defn request-password-reset [login-id]
+  (log/info "Password reset requested for login-id:" login-id)
+  (if (str/blank? login-id)
+    (do
+      (log/warn "Password reset skipped: blank login-id")
+      (reset-generic-response))
+    (if-let [user (model/get-user-by-login-id login-id)]
+      (let [token (str (java.util.UUID/randomUUID))
+            token-hash (sha256 token)
+            expires-at (now-plus-minutes 15)
+            reset-url (build-reset-url token)]
+        (model/set-password-reset-token (:id user) token-hash expires-at)
+        (log/info "Generated password reset URL:" reset-url)
+        (reset-generic-response))
+      (do
+        (log/warn "Password reset skipped: no user found for login-id" login-id)
+        (reset-generic-response)))))
+
+(defn reset-password [token new-password]
+  (log/info "Resetting password with token")
+  (if (or (str/blank? token) (str/blank? new-password))
+    (error 400 "Token and password are required")
+    (if-let [user (model/get-user-by-reset-token-hash (sha256 token))]
+      (let [result (model/update-user-password (:id user) (hashers/derive new-password))]
+        (if (= 1 (:next.jdbc/update-count (first result)))
+          (do
+            (model/consume-password-reset-token (:id user))
+            (success 200 "Password reset successfully"))
+          (error 500 "Failed to reset password")))
+      (error 400 "Invalid or expired reset token"))))
+
+(defn get-session-user [id]
+  (if-let [user (user-exists? id)]
+    (work 200 {:message "Session valid"
+               :user {:id (:id user)
+                      :username (:username user)
+                      :email (:email user)}})
+    (error 401 "Invalid session")))
 
 ;; Get all users
 (defn get-all-users []

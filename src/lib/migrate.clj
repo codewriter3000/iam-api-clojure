@@ -5,6 +5,7 @@
 (require '[iam-clj-api.user.model :as user-model])
 (require '[iam-clj-api.role.model :as role-model])
 (require '[iam-clj-api.permission.model :as permission-model])
+(require '[buddy.hashers :as hashers])
 
 (defn create-tables []
   (user-model/create-user-table)
@@ -23,7 +24,7 @@
 (defn add-core-perms-and-users []
   (permission-model/insert-permission {:name "Administrator" :description "Grants full system access, including user management, role assignment, permission configuration, and all administrative operations."})
   (permission-model/insert-permission {:name "Active" :description "Indicates that the user account is enabled and permitted to authenticate and access the system."})
-  (user-model/insert-user {:username "root" :email "root@example.com" :first_name "Root" :last_name "User" :password "changeme"})
+  (user-model/insert-user {:username "root" :email "root@example.com" :first_name "Root" :last_name "User" :password (hashers/derive "changeme")})
   (permission-model/add-permission-to-user
     (:id (permission-model/get-permission-by-name "Administrator"))
     (:id (user-model/get-user-by-username "root"))))

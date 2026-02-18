@@ -30,16 +30,6 @@
                   422 {:schema schemas/ErrorResponse}}
       (controller/insert-user user))
 
-    ;; User login
-    (POST "/login" [credentials]
-      :summary "User login"
-      :body [credentials schemas/LoginRequest]
-      :responses {200 {:schema schemas/MessageResponse
-                :description "Login successful"}
-                  401 {:schema schemas/ErrorResponse
-                       :description "Invalid credentials"}}
-      (controller/login-user (:username credentials) (:password credentials)))
-
     ;; Update a user
     (PUT "/:id" [id]
       :summary "Updates a user"

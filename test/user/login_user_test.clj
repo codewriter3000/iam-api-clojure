@@ -18,4 +18,6 @@
 (deftest test-login-user
   (testing "Login of user"
     (let [result (login-user "test" "Password1!")]
-      (is (= (success 200 "Login successful") result)))))
+      (is (= 200 (:status result)))
+      (is (= "Login successful" (get-in result [:body :message])))
+      (is (= "test" (get-in result [:body :user :username]))))))
