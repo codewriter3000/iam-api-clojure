@@ -179,7 +179,7 @@
       (map remove-namespace (map #(into {} %) result)))))
 
 ;; Add a permission to a role
-(defn add-permission-to-role [permission-id role-id]
+(defn add-permission-to-role [role-id permission-id]
   (let [query "INSERT INTO roles_permissions (role_id, permission_id) VALUES (?, ?);"
         params [(Integer. role-id) (Integer. permission-id)]] ; Ensure both parameters are integers
     (log-query query params)

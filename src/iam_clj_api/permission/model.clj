@@ -95,6 +95,22 @@
     (log-query query params)
     {:update-count (:next.jdbc/update-count (first result))}))
 
+;; Update a permission
+(defn update-permission [id permission]
+  (let [name (:name permission)
+        description (:description permission)
+        fields (cond-> []
+                 (contains? permission :name) (conj ["name" name])
+                 (contains? permission :description) (conj ["description" description]))]
+    (if (empty? fields)
+      [{:next.jdbc/update-count 0}]
+      (let [set-clause (clojure.string/join ", " (map #(str (first %) " = ?") fields))
+            values (map second fields)
+            query (str "UPDATE permissions SET " set-clause " WHERE id = ?;")
+            params (conj (vec values) (as-int id))]
+        (log-query query params)
+        (jdbc/execute! ds (into [query] params))))))
+
 ;; Delete a permission
 (defn delete-permission [id]
   (let [query "DELETE FROM permissions WHERE id = ?;"

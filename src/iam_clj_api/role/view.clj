@@ -39,7 +39,7 @@
     (PUT "/:id" [id]
       :summary "Updates a role"
       :body [role schemas/RoleUpdateRequest]
-      :responses {200 {:schema schemas/RoleResponse
+      :responses {200 {:schema schemas/RoleWithUsersResponse
                        :description "Role updated successfully"}
                   500 {:schema schemas/ErrorResponse
                        :description "Failed to update role"}}

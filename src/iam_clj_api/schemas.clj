@@ -62,6 +62,9 @@
    (s/optional-key :users) [{:id Integer}]})
 (s/defschema CreateRoleRequest {:name String :description (s/maybe String)})
 (s/defschema CreatePermissionRequest {:name String :description (s/maybe String)})
+(s/defschema PermissionUpdateRequest
+  {(s/optional-key :name) String
+   (s/optional-key :description) String})
 (s/defschema NamePayload {:name String})
 (s/defschema DescriptionPayload {:description String})
 (s/defschema PasswordPayload {:password String})

@@ -51,6 +51,19 @@
         (model/insert-permission validated-input)
         (success 201 "Permission created successfully")))))
 
+;; Update a permission
+(defn update-permission [id permission]
+  (log/info "Updating permission with ID:" id "Data:" permission)
+  (if (permission-exists? id)
+    (if (empty? permission)
+      (error 400 "Missing permission data")
+      (let [result (model/update-permission id permission)
+            update-count (:next.jdbc/update-count (first result))]
+        (if (= 1 update-count)
+          (work 200 {:permission (assoc permission :id (Integer/parseInt (str id)))})
+          (error 500 "Failed to update permission"))))
+    (error 404 "Permission not found")))
+
 ;; Update a permission's name
 (defn update-permission-name [id new-name]
   (log/info "Updating permission name for ID:" id)
@@ -58,7 +71,7 @@
     (if (empty? new-name)
       (error 400 "Missing new name")
       (let [result (model/update-permission-name id new-name)]
-        (if (= 1 (:update-count result))
+        (if (= 1 (:next.jdbc/update-count (first result)))
           (success 200 "Permission name updated")
           (error 400 "Failed to update permission name"))))
     (error 404 "Permission not found")))
@@ -68,7 +81,7 @@
   (log/info "Updating permission description for ID:" id)
   (if-let [permission (permission-exists? id)]
     (let [result (model/update-permission-description id new-description)]
-      (if (= 1 (:update-count result))
+      (if (= 1 (:next.jdbc/update-count (first result)))
         (success 200 "Permission description updated")
         (error 400 "Failed to update permission description")))
     (error 404 "Permission not found")))
@@ -107,7 +120,7 @@
 
       :else
       (let [result (model/add-permission-to-user permission-id target-user-id)]
-        (if (= 1 (:insert-count result))
+        (if (= 1 (:next.jdbc/update-count (first result)))
           (success 201 "Permission added to user")
           (error 400 "Failed to add permission to user"))))))
 
@@ -128,6 +141,6 @@
 
       :else
       (let [result (model/remove-permission-from-user permission-id target-user-id)]
-        (if (= 1 (:delete-count result))
+        (if (= 1 (:next.jdbc/update-count (first result)))
           (success 204 "Permission removed from user")
           (error 400 "Failed to remove permission from user"))))))

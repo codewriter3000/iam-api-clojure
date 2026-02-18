@@ -39,6 +39,20 @@
                   400 {:schema schemas/ErrorResponse}}
       (controller/insert-permission (:name permission) (:description permission)))
 
+        ;; Update a permission
+        (PUT "/:id" [id]
+       :summary "Updates a permission"
+       :body [permission schemas/PermissionUpdateRequest]
+       :responses {200 {:schema schemas/PermissionResponse
+               :description "Permission updated successfully"}
+             400 {:schema schemas/ErrorResponse
+               :description "Missing permission data"}
+             404 {:schema schemas/ErrorResponse
+               :description "Permission not found"}
+             500 {:schema schemas/ErrorResponse
+               :description "Failed to update permission"}}
+       (controller/update-permission id permission))
+
     ;; Update a permission's name
     (PUT "/:id/name" [id name]
       :summary "Updates a permission's name"
