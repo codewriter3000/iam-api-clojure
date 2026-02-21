@@ -52,6 +52,19 @@ To start a web server for the application, run:
 
     lein run
 
+## Database setup
+
+Use the DB migration namespace for schema and seed setup:
+
+  lein run -m iam-clj-api.db.migrate init
+
+Other useful commands:
+
+  lein run -m iam-clj-api.db.migrate create-tables
+  lein run -m iam-clj-api.db.migrate drop-tables
+  lein run -m iam-clj-api.db.migrate add-core-perms-and-users
+  lein run -m iam-clj-api.db.migrate add-oauth-defaults
+
 ## License
 
 Copyright © 2025 FIXME

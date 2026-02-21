@@ -51,6 +51,14 @@
                   500 {:schema schemas/ErrorResponse}}
       (controller/update-user-password id (:password password)))
 
+    ;; Force password reset for a user
+    (POST "/:id/password/force-reset" [id]
+      :summary "Forces a password reset on next sign in"
+      :responses {200 {:schema schemas/MessageResponse}
+                  404 {:schema schemas/ErrorResponse}
+                  500 {:schema schemas/ErrorResponse}}
+      (controller/force-password-reset id))
+
     ;; Delete a user
     (DELETE "/:id" [id]
       :summary "Deletes a user"

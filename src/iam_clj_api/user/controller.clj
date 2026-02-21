@@ -47,6 +47,48 @@
       :else
       (assoc user :password (hashers/derive (get user :password))))))
 
+(defn- enabled-account? [permission-names]
+  (let [normalized (->> permission-names
+                        (map #(-> % str str/trim str/lower-case))
+                        (remove str/blank?)
+                        set)]
+    (or (contains? normalized "active")
+        (contains? normalized "enabled"))))
+
+(defn- normalize-username [username]
+  (-> username
+      (or "")
+      str
+      str/trim
+      str/lower-case))
+
+(defn- root-user? [user]
+  (= "root" (normalize-username (:username user))))
+
+(defn- build-user-login-payload [user]
+  (let [permissions (->> (model/get-permissions-for-user (:id user))
+                         (map :name)
+                         (remove str/blank?)
+                         distinct
+                         vec)]
+    {:id (:id user)
+     :username (:username user)
+     :email (:email user)
+     :first_name (:first_name user)
+     :last_name (:last_name user)
+     :permissions permissions}))
+
+(defn password-reset-required? [id]
+  (if-let [user (user-exists? id)]
+    (boolean (:force_password_reset user))
+    false))
+
+(defn- username-change-attempt? [existing-user payload]
+  (and (contains? payload :username)
+       (some? (:username payload))
+       (not= (normalize-username (:username existing-user))
+             (normalize-username (:username payload)))))
+
 ;; Insert a new user
 (defn insert-user [user]
   (log/info "Inserting user:" user)
@@ -62,10 +104,19 @@
   (log/info "Logging in user:" login-id)
   (let [user (model/get-user-by-login-id login-id)]
     (if (and user (hashers/check password (get user :password)))
-      (work 200 {:message "Login successful"
-                 :user {:id (:id user)
-                        :username (:username user)
-                        :email (:email user)}})
+      (if (boolean (:force_password_reset user))
+        (work 200 {:message "Password reset required"
+                   :user {:id (:id user)
+                          :username (:username user)
+                          :email (:email user)
+                          :first_name (:first_name user)
+                          :last_name (:last_name user)
+                          :permissions []}})
+        (let [login-user (build-user-login-payload user)]
+          (if (enabled-account? (:permissions login-user))
+            (work 200 {:message "Login successful"
+                       :user login-user})
+            (error 403 "Account is disabled"))))
       (error 401 "Invalid username or password"))))
 
 (defn request-password-reset [login-id]
@@ -86,26 +137,65 @@
         (log/warn "Password reset skipped: no user found for login-id" login-id)
         (reset-generic-response)))))
 
-(defn reset-password [token new-password]
+(defn reset-password [token new-password session-user-id force-reset-authorized]
   (log/info "Resetting password with token")
-  (if (or (str/blank? token) (str/blank? new-password))
-    (error 400 "Token and password are required")
-    (if-let [user (model/get-user-by-reset-token-hash (sha256 token))]
-      (let [result (model/update-user-password (:id user) (hashers/derive new-password))]
-        (if (= 1 (:next.jdbc/update-count (first result)))
-          (do
-            (model/consume-password-reset-token (:id user))
-            (success 200 "Password reset successfully"))
-          (error 500 "Failed to reset password")))
-      (error 400 "Invalid or expired reset token"))))
+  (if (str/blank? new-password)
+    (error 400 "Password is required")
+    (if (str/blank? token)
+      (if (and session-user-id
+               force-reset-authorized
+               (password-reset-required? session-user-id))
+        (let [result (model/update-user-password session-user-id (hashers/derive new-password))]
+          (if (= 1 (:next.jdbc/update-count (first result)))
+            (do
+              (model/set-force-password-reset session-user-id false)
+              (model/consume-password-reset-token session-user-id)
+              (if-let [updated-user (model/get-user-by-id session-user-id)]
+                (work 200 {:message "Password reset successfully"
+                           :user (build-user-login-payload updated-user)})
+                (error 500 "Failed to load user after password reset")))
+            (error 500 "Failed to reset password")))
+        (error 403 "Password reset requires a verified login or valid reset token"))
+      (if-let [user (model/get-user-by-reset-token-hash (sha256 token))]
+        (let [result (model/update-user-password (:id user) (hashers/derive new-password))]
+          (if (= 1 (:next.jdbc/update-count (first result)))
+            (do
+              (model/set-force-password-reset (:id user) false)
+              (model/consume-password-reset-token (:id user))
+              (if-let [updated-user (model/get-user-by-id (:id user))]
+                (work 200 {:message "Password reset successfully"
+                           :user (build-user-login-payload updated-user)})
+                (error 500 "Failed to load user after password reset")))
+            (error 500 "Failed to reset password")))
+        (error 400 "Invalid or expired reset token")))))
 
 (defn get-session-user [id]
   (if-let [user (user-exists? id)]
-    (work 200 {:message "Session valid"
-               :user {:id (:id user)
-                      :username (:username user)
-                      :email (:email user)}})
+    (if (boolean (:force_password_reset user))
+      (error 403 "Password reset required before access is allowed")
+      (let [permissions (->> (model/get-permissions-for-user id)
+                             (map :name)
+                             (remove str/blank?)
+                             distinct
+                             vec)]
+      (work 200 {:message "Session valid"
+                 :user {:id (:id user)
+                        :username (:username user)
+                        :email (:email user)
+                        :first_name (:first_name user)
+                        :last_name (:last_name user)
+                        :permissions permissions}})))
     (error 401 "Invalid session")))
+
+(defn force-password-reset [id]
+  (log/info "Forcing password reset for user ID:" id)
+  (let [user (user-exists? id)]
+    (if user
+      (let [result (model/set-force-password-reset id true)]
+        (if (= 1 (:next.jdbc/update-count (first result)))
+          (success 200 "Password reset will be required on next sign in")
+          (error 500 "Failed to force password reset")))
+      (error 404 "User not found"))))
 
 ;; Get all users
 (defn get-all-users []
@@ -129,15 +219,18 @@
   (let [existing-user (user-exists? id)]
     (log/info "User exists:" existing-user)
     (if existing-user
-      (do
-        (log/info "User found:" existing-user)
-        (let [result (model/update-user id user)]
-          (log/info "Update result:" (:next.jdbc/update-count (first result)))
-          (if (= 1 (:next.jdbc/update-count (first result)))
-            (let [updated-user (merge existing-user user)] ; Merge existing and updated fields
-              (log/info "Updated user:" updated-user)
-              (work 200 {:user updated-user}))
-            (error 500 "Failed to update user"))))
+      (if (and (root-user? existing-user)
+               (username-change-attempt? existing-user user))
+        (error 403 "Cannot change root username")
+        (do
+          (log/info "User found:" existing-user)
+          (let [result (model/update-user id user)]
+            (log/info "Update result:" (:next.jdbc/update-count (first result)))
+            (if (= 1 (:next.jdbc/update-count (first result)))
+              (let [updated-user (merge existing-user user)] ; Merge existing and updated fields
+                (log/info "Updated user:" updated-user)
+                (work 200 {:user updated-user}))
+              (error 500 "Failed to update user")))))
       (error 404 "User not found"))))
 
 ;; Update a user's username
@@ -145,10 +238,14 @@
   (log/info "Updating username for user ID:" id)
   (let [user (user-exists? id)]
     (if user
-      (let [result (model/update-user id {:username new-username})]
-        (if (= 1 (:next.jdbc/update-count (first result)))
-          (success 200 "Username updated successfully")
-          (error 500 "Failed to update username")))
+      (if (and (root-user? user)
+               (not= (normalize-username (:username user))
+                     (normalize-username new-username)))
+        (error 403 "Cannot change root username")
+        (let [result (model/update-user id {:username new-username})]
+          (if (= 1 (:next.jdbc/update-count (first result)))
+            (success 200 "Username updated successfully")
+            (error 500 "Failed to update username"))))
       (error 404 "User not found"))))
 
 ;; Update a user's email
@@ -178,10 +275,12 @@
   (log/info "Deleting user with ID:" id)
   (let [user (user-exists? id)]
     (if user
-      (let [result (model/delete-user id)]
-        (if result
-          (success 204 "User deleted successfully")
-          (error 500 "Failed to delete user")))
+      (if (root-user? user)
+        (error 403 "Cannot delete root user")
+        (let [result (model/delete-user id)]
+          (if result
+            (success 204 "User deleted successfully")
+            (error 500 "Failed to delete user"))))
       (error 404 "User not found"))))
 
 ;; Get roles for a user

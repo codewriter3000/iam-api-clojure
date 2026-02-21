@@ -34,6 +34,7 @@
                     first_name VARCHAR(32),
                     last_name VARCHAR(32),
                     password VARCHAR(256) NOT NULL,
+                    force_password_reset BOOLEAN NOT NULL DEFAULT TRUE,
                     reset_token_hash VARCHAR(256),
                     reset_token_expires_at TIMESTAMP,
                     reset_token_used_at TIMESTAMP,
@@ -57,7 +58,7 @@
 
 ;; Get all users
 (defn get-user-by-id [id]
-  (let [query "SELECT id, username, email, first_name, last_name, created_at FROM users WHERE id = ?;"
+  (let [query "SELECT id, username, email, first_name, last_name, force_password_reset, created_at FROM users WHERE id = ?;"
         params [(Integer. id)] ; Ensure id is passed as an Integer
           result (jdbc/execute! ds (into [query] params))]
             (log-query query params)
@@ -68,7 +69,7 @@
 
 ;; filepath: c:\Users\alex.MICHARSKI\Workspace\iam-clj-api\src\iam_clj_api\user\model.clj
 (defn get-all-users []
-  (let [query "SELECT id, username, email, first_name, last_name, created_at FROM users;"
+  (let [query "SELECT id, username, email, first_name, last_name, force_password_reset, created_at FROM users;"
         result (jdbc/execute! ds [query])]
     (log-query query [])
     (map remove-namespace (map #(into {} %) result))))
@@ -132,6 +133,12 @@
 (defn update-user-password [id new-password]
   (let [query "UPDATE users SET password = ? WHERE id = ?;"
         params [new-password (Integer. id)]]
+    (log-query query params)
+    (jdbc/execute! ds (into [query] params))))
+
+(defn set-force-password-reset [id force-password-reset]
+  (let [query "UPDATE users SET force_password_reset = ? WHERE id = ?;"
+        params [(boolean force-password-reset) (Integer. id)]]
     (log-query query params)
     (jdbc/execute! ds (into [query] params))))
 

@@ -14,6 +14,8 @@
             [iam-clj-api.user.view :as user-view]
             [iam-clj-api.permission.view :as permission-view]
             [iam-clj-api.role.view :as role-view]
+            [iam-clj-api.oauth.view :as oauth-view]
+            [iam-clj-api.oauth.admin.view :as oauth-admin-view]
             [iam-clj-api.auth.session :as auth-session]
             [clojure.tools.logging :as log]
             [compojure.api.sweet :refer [api context GET routes]]))
@@ -25,7 +27,9 @@
   (fn [request]
     (log/info "Handling request:" request)
     (let [response (handler request)]
-      (log/info "Response:" response)
+      (if (<= 400 (or (:status response) 0) 599)
+        (log/error "Response:" response)
+        (log/info "Response:" response))
       response)))
 
 (defn wrap-json-response [handler]
@@ -64,7 +68,9 @@
               auth-view/auth-view-routes
               user-view/user-view-routes
               permission-view/permission-view-routes
-              role-view/role-view-routes))
+              role-view/role-view-routes
+              oauth-admin-view/oauth-admin-view-routes)
+            oauth-view/oauth-view-routes)
            (wrap-json-response)))
       ;; Middleware
       (wrap-resource "public") ; Serve all static files from "resources/public"

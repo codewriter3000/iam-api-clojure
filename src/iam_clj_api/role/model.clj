@@ -41,6 +41,15 @@
                     permission_id INT NOT NULL
                   );"]))
 
+(defn ensure-role-tables! []
+  (try
+    (create-role-table)
+    (catch Exception e
+      (log/warn e "Unable to ensure role-related tables exist"))))
+
+(defonce role-tables-ready
+  (ensure-role-tables!))
+
 ;; Drop the roles table
 (defn drop-role-table []
   (jdbc/execute! ds ["DROP TABLE IF EXISTS roles;

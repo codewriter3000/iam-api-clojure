@@ -1,6 +1,7 @@
 (ns iam-clj-api.permission.controller
   (:require [lib.core :refer :all]
             [iam-clj-api.permission.model :as model]
+            [clojure.string :as str]
             [clojure.tools.logging :as log]
             [lib.response :refer [error success work]]
             [lib.exists :refer [permission-exists? user-exists?]]))
@@ -12,6 +13,19 @@
       (Integer/parseInt (str id)))
     (catch Exception _
       nil)))
+
+(defn- normalize-name [value]
+  (-> value
+      (or "")
+      str
+      str/trim
+      str/lower-case))
+
+(defn- root-user? [user]
+  (= "root" (normalize-name (:username user))))
+
+(def admin-permission-names #{"administrator" "admin"})
+(def disabled-permission-names #{"disabled"})
 
 ;; Get all permissions
 (defn get-all-permissions []
@@ -107,16 +121,27 @@
 (defn add-permission-to-user [id user-id]
   (log/info "Adding permission ID:" id "to user ID:" user-id)
   (let [permission-id (parse-id id)
-        target-user-id (parse-id user-id)]
+        target-user-id (parse-id user-id)
+        permission (when permission-id (permission-exists? permission-id))
+        target-user (when target-user-id (user-exists? target-user-id))
+        permission-name (normalize-name (:name permission))]
     (cond
       (or (nil? permission-id) (nil? target-user-id))
       (error 400 "Invalid permission ID or user ID")
 
-      (not (permission-exists? permission-id))
+      (not permission)
       (error 404 "Permission not found")
 
-      (not (user-exists? target-user-id))
+      (not target-user)
       (error 404 "User not found")
+
+      (and (root-user? target-user)
+           (contains? admin-permission-names permission-name))
+      (error 403 "Cannot change administrator permissions for root user")
+
+      (and (root-user? target-user)
+           (contains? disabled-permission-names permission-name))
+      (error 403 "Cannot add disabled permission to root user")
 
       :else
       (let [result (model/add-permission-to-user permission-id target-user-id)]
@@ -128,16 +153,23 @@
 (defn remove-permission-from-user [id user-id]
   (log/info "Removing permission ID:" id "from user ID:" user-id)
   (let [permission-id (parse-id id)
-        target-user-id (parse-id user-id)]
+        target-user-id (parse-id user-id)
+        permission (when permission-id (permission-exists? permission-id))
+        target-user (when target-user-id (user-exists? target-user-id))
+        permission-name (normalize-name (:name permission))]
     (cond
       (or (nil? permission-id) (nil? target-user-id))
       (error 400 "Invalid permission ID or user ID")
 
-      (not (permission-exists? permission-id))
+      (not permission)
       (error 404 "Permission not found")
 
-      (not (user-exists? target-user-id))
+      (not target-user)
       (error 404 "User not found")
+
+      (and (root-user? target-user)
+           (contains? admin-permission-names permission-name))
+      (error 403 "Cannot change administrator permissions for root user")
 
       :else
       (let [result (model/remove-permission-from-user permission-id target-user-id)]

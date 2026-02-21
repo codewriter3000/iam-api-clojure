@@ -3,12 +3,17 @@
   <Appenders>
     <!-- Console Appender -->
     <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/>
+      <PatternLayout disableAnsi="false" noConsoleNoAnsi="false"
+        pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %highlight{%-5level %logger{36} - %msg}{FATAL=bright red, ERROR=red, WARN=yellow, INFO=green, DEBUG=cyan, TRACE=blue}%n">
+        <RegexReplacement regex="(bcrypt\+sha)\S*" replacement="$1[REDACTED]"/>
+      </PatternLayout>
     </Console>
 
     <!-- Rolling File Appender -->
     <RollingFile name="File" fileName="logs/app.log" filePattern="logs/app-%d{yyyy-MM-dd}-%i.log">
-      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/>
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n">
+        <RegexReplacement regex="(bcrypt\+sha)\S*" replacement="$1[REDACTED]"/>
+      </PatternLayout>
       <Policies>
         <SizeBasedTriggeringPolicy size="10MB"/>
       </Policies>

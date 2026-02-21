@@ -41,6 +41,15 @@
                     permission_id INT NOT NULL
                   );"]))
 
+  (defn ensure-permission-tables! []
+    (try
+      (create-permission-table)
+      (catch Exception e
+        (log/warn e "Unable to ensure permission-related tables exist"))))
+
+  (defonce permission-tables-ready
+    (ensure-permission-tables!))
+
 ;; Drop the permissions table
 (defn drop-permission-table []
   (jdbc/execute! ds ["DROP TABLE IF EXISTS permissions; DROP TABLE IF EXISTS users_permissions;"]))
