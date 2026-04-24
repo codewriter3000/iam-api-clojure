@@ -43,6 +43,6 @@
                                     [ring/ring-mock "0.4.0"]]
                      :plugins [[cider/cider-nrepl "0.55.7"]]}
 
-             :uberjar {:aot #"(iam-clj-api|lib).*"
+             :uberjar {:aot :all
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
 
