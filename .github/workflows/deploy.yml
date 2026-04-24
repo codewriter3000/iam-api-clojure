@@ -1,0 +1,110 @@
+name: Deploy API
+
+on:
+  push:
+    branches:
+      - production
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+# Minimal permissions - security best practice
+permissions:
+  contents: read
+  actions: read
+
+env:
+  JAVA_VERSION: '21'
+  LEIN_VERSION: 'stable'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # GitHub-hosted runner - safe for public repos
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false  # Don't persist credentials
+
+      - name: Setup Java
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00  # v4.7.1
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install Leiningen
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/technomancy/leiningen/${{ env.LEIN_VERSION }}/bin/lein -o /usr/local/bin/lein
+          chmod +x /usr/local/bin/lein
+          lein version
+
+      - name: Run tests
+        run: lein test
+
+      - name: Build uberjar
+        run: lein uberjar
+
+      - name: Generate build manifest
+        run: |
+          cat > target/build-manifest.json <<EOF
+          {
+            "build_sha": "${{ github.sha }}",
+            "build_ref": "${{ github.ref }}",
+            "build_time": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "triggered_by": "${{ github.actor }}",
+            "repository": "${{ github.repository }}"
+          }
+          EOF
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: iam-clj-api-build-${{ github.sha }}
+          path: |
+            target/iam-clj-api-*-standalone.jar
+            target/build-manifest.json
+          retention-days: 7
+          if-no-files-found: error
+
+  trigger-deployment:
+    needs: build
+    runs-on: ubuntu-latest
+    # CRITICAL: Only trigger deployment from production branch pushes, never from PRs
+    if: github.event_name == 'push' && github.ref == 'refs/heads/production'
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Trigger private deployment workflow
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea  # v7.0.1
+        with:
+          github-token: ${{ secrets.DEPLOYMENT_TRIGGER_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'codewriter3000',
+              repo: 'onprem-deployment',
+              workflow_id: 'deploy.yml',
+              ref: 'master',
+              inputs: {
+                build_sha: '${{ github.sha }}',
+                public_repo: '${{ github.repository }}',
+                triggered_by: '${{ github.actor }}',
+                build_artifact: 'iam-clj-api-build-${{ github.sha }}',
+                deploy_env: 'prod',
+                app_id: 'cw3admin',
+                build_id: String(${{ github.run_number }})
+              }
+            });
+            console.log('Deployment triggered successfully');
+            console.log('Build SHA: ${{ github.sha }}');
+            console.log('Triggered by: ${{ github.actor }}');
+
+      - name: Post deployment trigger status
+        if: always()
+        run: |
+          echo "::notice::Deployment workflow triggered in private repository"
+          echo "::notice::Build SHA: ${{ github.sha }}"
+          echo "::notice::Triggered by: ${{ github.actor }}"
+

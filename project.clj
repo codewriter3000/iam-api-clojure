@@ -43,4 +43,7 @@
 
              :cider {:dependencies [[javax.servlet/servlet-api "2.5"]
                                     [ring/ring-mock "0.4.0"]]
-                     :plugins [[cider/cider-nrepl "0.55.7"]]}})
+                     :plugins [[cider/cider-nrepl "0.55.7"]]}
+
+             :uberjar {:aot :all
+                       :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
