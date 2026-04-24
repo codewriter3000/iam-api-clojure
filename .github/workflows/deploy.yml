@@ -78,28 +78,31 @@ jobs:
 
     steps:
       - name: Trigger private deployment workflow
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea  # v7.0.1
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        env:
+            BUILD_SHA: ${{ github.sha }}
+            PUBLIC_REPO: ${{ github.repository }}
+            TRIGGERED_BY: ${{ github.actor }}
+            BUILD_ARTIFACT: iam-clj-api-build-${{ github.sha }}
+            BUILD_ID: ${{ github.run_number }}
         with:
-          github-token: ${{ secrets.DEPLOYMENT_TRIGGER_TOKEN }}
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: 'codewriter3000',
-              repo: 'onprem-deployment',
-              workflow_id: 'deploy.yml',
-              ref: 'master',
-              inputs: {
-                build_sha: '${{ github.sha }}',
-                public_repo: '${{ github.repository }}',
-                triggered_by: '${{ github.actor }}',
-                build_artifact: 'iam-clj-api-build-${{ github.sha }}',
-                deploy_env: 'prod',
-                app_id: 'cw3admin',
-                build_id: String(${{ github.run_number }})
-              }
-            });
-            console.log('Deployment triggered successfully');
-            console.log('Build SHA: ${{ github.sha }}');
-            console.log('Triggered by: ${{ github.actor }}');
+            github-token: ${{ secrets.DEPLOYMENT_TRIGGER_TOKEN }}
+            script: |
+                await github.rest.actions.createWorkflowDispatch({
+                    owner: 'codewriter3000',
+                    repo: 'onprem-deployment',
+                    workflow_id: 'deploy.yml',
+                    ref: 'master',
+                    inputs: {
+                        build_sha: process.env.BUILD_SHA,
+                        public_repo: process.env.PUBLIC_REPO,
+                        triggered_by: process.env.TRIGGERED_BY,
+                        build_artifact: process.env.BUILD_ARTIFACT,
+                        deploy_env: 'prod',
+                        app_id: 'cw3admin',
+                        build_id: process.env.BUILD_ID
+                    }
+                });
 
       - name: Post deployment trigger status
         if: always()
