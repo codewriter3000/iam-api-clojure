@@ -43,7 +43,26 @@ jobs:
         run: lein test
 
       - name: Build uberjar
+        # Dummy build-time env vars are required so that top-level (def ds (get-datasource))
+        # in model namespaces does not throw during AOT compilation. No real DB connection
+        # is made at compile time — these values are never used at runtime.
         run: lein uberjar
+        env:
+          DATABASE_TYPE: postgresql
+          DATABASE_NAME: ci_db
+          DATABASE_HOST: localhost
+          DATABASE_PORT: "5432"
+          DATABASE_USER: ci_user
+          DATABASE_PASS: ci_pass
+          SMTP_HOST: localhost
+          SMTP_PORT: "587"
+          SMTP_USER: ci_user
+          SMTP_PASS: ci_pass
+          SMTP_FROM: no-reply@localhost
+          SMTP_STARTTLS: "true"
+          SMTP_AUTH: "true"
+          FRONTEND_BASE_URL: http://localhost:3000
+          ENV: ci
 
       - name: Generate build manifest
         run: |

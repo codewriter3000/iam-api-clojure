@@ -1,6 +1,6 @@
 (ns lib.core
   (:require
-   [env :as env]
+   [lib.env :as env]
    [next.jdbc :as jdbc]))
 
 (defn remove-namespace [m]

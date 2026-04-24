@@ -9,10 +9,10 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 *.env
+!.env.example
 *.log
 *.lein-env
 *.lein-failures
 /.vscode
 /.lsp
 /.clj-kondo
-/src/env.clj

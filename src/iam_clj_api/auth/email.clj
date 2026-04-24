@@ -1,6 +1,6 @@
 (ns iam-clj-api.auth.email
   (:require [clojure.tools.logging :as log]
-            [env :as env])
+            [lib.env :as env])
   (:import [java.util Properties]
            [jakarta.mail Message$RecipientType Session Transport]
            [jakarta.mail.internet InternetAddress MimeMessage]))

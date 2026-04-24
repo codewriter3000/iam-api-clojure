@@ -22,7 +22,6 @@
 
                  [buddy/buddy-hashers "1.4.0"]
                  [com.sun.mail/jakarta.mail "2.0.1"]
-                 [environ "1.2.0"]
                  ; Logging
                  [org.clojure/tools.logging "1.3.0"]
                  [org.apache.logging.log4j/log4j-slf4j-impl "2.24.3"]
@@ -34,7 +33,6 @@
                  [cider/cider-nrepl "0.55.7"]]
 
   :plugins [[lein-ring "0.12.5"]
-            [lein-environ "1.2.0"]
             [cider/cider-nrepl "0.55.7"]]
   :ring {:handler iam-clj-api.handler/app
          :port 8080}
@@ -45,5 +43,6 @@
                                     [ring/ring-mock "0.4.0"]]
                      :plugins [[cider/cider-nrepl "0.55.7"]]}
 
-             :uberjar {:aot :all
+             :uberjar {:aot #"iam-clj-api.*"
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
+
