@@ -72,11 +72,16 @@
         base-url))))
 
 (defn- cors-allowed-origins []
-  (let [configured (or (System/getenv "CORS_ALLOWED_ORIGINS")
-                       (frontend-origin))]
-    (->> (str/split configured #",")
+  (let [configured (some-> (System/getenv "CORS_ALLOWED_ORIGINS")
+                           (str/split #","))
+        defaults ["http://localhost:3000"
+                  "https://localhost:3000"
+                  (frontend-origin)]]
+    (->> (concat configured defaults)
+         (map str)
          (map str/trim)
          (remove str/blank?)
+         distinct
          vec)))
 
 (defn- env-true? [v]
@@ -131,7 +136,7 @@
       (wrap-cors :access-control-allow-origin (cors-allowed-origins)
                  :access-control-allow-methods [:get :put :post :delete :options]
                  :access-control-allow-headers ["Content-Type" "Authorization" "Cookie"]
-                 :access-control-allow-credentials "true")))
+                 :access-control-allow-credentials true)))
 
 (defrecord HttpServerComponent [config] component/Lifecycle
 
