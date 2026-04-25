@@ -137,7 +137,7 @@
       (wrap-cors :access-control-allow-origin (cors-allowed-origins)
                  :access-control-allow-methods [:get :put :post :delete :options]
                  :access-control-allow-headers ["Content-Type" "Authorization" "Cookie"]
-                 :access-control-allow-credentials true)))
+                 :access-control-allow-credentials "true")))
 
 (defrecord HttpServerComponent [config] component/Lifecycle
 
