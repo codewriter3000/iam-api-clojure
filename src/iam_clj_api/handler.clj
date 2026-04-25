@@ -82,6 +82,7 @@
          (map str/trim)
          (remove str/blank?)
          distinct
+         (map #(re-pattern (java.util.regex.Pattern/quote %)))
          vec)))
 
 (defn- env-true? [v]
