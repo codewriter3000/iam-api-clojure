@@ -17,6 +17,7 @@
             [iam-clj-api.oauth.view :as oauth-view]
             [iam-clj-api.oauth.admin.view :as oauth-admin-view]
             [iam-clj-api.auth.session :as auth-session]
+            [clojure.string :as str]
             [clojure.tools.logging :as log]
             [compojure.api.sweet :refer [api context GET routes]]))
 
@@ -53,6 +54,51 @@
       (log/info "UPDATE RESPONSE IN MIDDLEWARE")
       response)))
 
+(defn- frontend-base-url []
+  (or (System/getenv "FRONTEND_BASE_URL")
+      "http://localhost:3000"))
+
+(defn- frontend-origin []
+  (let [base-url (frontend-base-url)]
+    (try
+      (let [uri (java.net.URI. base-url)
+            scheme (.getScheme uri)
+            host (.getHost uri)
+            port (.getPort uri)]
+        (if (and (some? scheme) (some? host))
+          (str scheme "://" host (when (pos? port) (str ":" port)))
+          base-url))
+      (catch Exception _
+        base-url))))
+
+(defn- cors-allowed-origins []
+  (let [configured (or (System/getenv "CORS_ALLOWED_ORIGINS")
+                       (frontend-origin))]
+    (->> (str/split configured #",")
+         (map str/trim)
+         (remove str/blank?)
+         vec)))
+
+(defn- env-true? [v]
+  (contains? #{"true" "1" "yes" "on"}
+             (some-> v str str/trim str/lower-case)))
+
+(defn- session-cookie-attrs []
+  (let [same-site-env (some-> (System/getenv "SESSION_COOKIE_SAME_SITE")
+                              str/trim
+                              str/lower-case)
+        same-site (case same-site-env
+                    "none" :none
+                    "strict" :strict
+                    "lax" :lax
+                    :lax)
+        secure? (if-let [secure-env (System/getenv "SESSION_COOKIE_SECURE")]
+                  (env-true? secure-env)
+                  false)]
+    {:http-only true
+     :same-site same-site
+     :secure secure?}))
+
 (def app
   (-> (routes
        ;; Serve Swagger UI as static files
@@ -75,19 +121,17 @@
       ;; Middleware
       (wrap-resource "public") ; Serve all static files from "resources/public"
       wrap-error-handling
-      (wrap-cors :access-control-allow-origin [#"http://localhost:3000"]
-                 :access-control-allow-methods [:get :put :post :delete :options]
-                 :access-control-allow-headers ["Content-Type" "Authorization" "Cookie"]
-                 :access-control-allow-credentials "true")
       keyword-params/wrap-keyword-params
       params/wrap-params
       auth-session/wrap-require-session
       (wrap-session {:store (memory-store)
                      :cookie-name "iam-session"
-                     :cookie-attrs {:http-only true
-                                    :same-site :lax
-                                    :secure false}})
-      log-request))
+                     :cookie-attrs (session-cookie-attrs)})
+      log-request
+      (wrap-cors :access-control-allow-origin (cors-allowed-origins)
+                 :access-control-allow-methods [:get :put :post :delete :options]
+                 :access-control-allow-headers ["Content-Type" "Authorization" "Cookie"]
+                 :access-control-allow-credentials "true")))
 
 (defrecord HttpServerComponent [config] component/Lifecycle
 
