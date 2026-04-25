@@ -1,0 +1,19 @@
+cw3admin.amicharskilabs.com {
+    # Browser calls stay on HTTPS same-origin and are proxied internally to backend VM.
+    handle /api/* {
+        reverse_proxy 10.0.0.2:8001
+    }
+
+    handle /swagger-ui/* {
+        reverse_proxy 10.0.0.2:8001
+    }
+
+    handle /swagger.json {
+        reverse_proxy 10.0.0.2:8001
+    }
+
+    # Frontend app server on the on-prem host.
+    handle {
+        reverse_proxy 127.0.0.1:3000
+    }
+}
