@@ -69,4 +69,4 @@ Other useful commands:
 
 ## License
 
-Copyright © 2025 FIXME
+Copyright © 2026 Alexander J. Micharski
