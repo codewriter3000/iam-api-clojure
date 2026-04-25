@@ -35,7 +35,7 @@
   :plugins [[lein-ring "0.12.5"]
             [cider/cider-nrepl "0.55.7"]]
   :ring {:handler iam-clj-api.handler/app
-         :port 8080}
+         :port 8001}
   :profiles {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
                                   [ring/ring-mock "0.4.0"]]}
 

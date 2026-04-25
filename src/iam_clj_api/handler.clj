@@ -96,7 +96,7 @@
              (let [handler (-> app
                                wrap-reload
                                wrap-custom-middleware)
-                   server (jetty/run-jetty handler {:port 8080 :join? false})]
+                   server (jetty/run-jetty handler {:port 8001 :join? false})]
                (assoc component :server server)))
 
            (stop [component]

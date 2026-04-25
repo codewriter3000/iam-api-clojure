@@ -1,6 +1,6 @@
 (ns iam-clj-api.oauth.config)
 
-(def issuer "http://localhost:8080")
+(def issuer "http://localhost:8001")
 (def frontend-oauth-login-url "http://localhost:3000/oauth/login")
 (def access-token-ttl-seconds (* 15 60))
 (def auth-code-ttl-seconds (* 5 60))
