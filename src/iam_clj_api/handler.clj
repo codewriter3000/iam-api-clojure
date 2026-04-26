@@ -36,7 +36,9 @@
 (defn wrap-json-response [handler]
   (fn [request]
     (let [response (handler request)]
-      (assoc-in response [:headers "Content-Type"] "application/json"))))
+      (if (some? (:body response))
+        (assoc-in response [:headers "Content-Type"] "application/json")
+        response))))
 
 (defn wrap-error-handling [handler]
   (fn [request]
