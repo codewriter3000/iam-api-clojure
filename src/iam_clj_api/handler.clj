@@ -2,7 +2,6 @@
   (:require [compojure.route :as route]
             [com.stuartsierra.component :as component]
             [ring.adapter.jetty :as jetty]
-            [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.params :as params]
             [ring.middleware.keyword-params :as keyword-params]
             [ring.middleware.session :refer [wrap-session]]
@@ -73,17 +72,6 @@
       (catch Exception _
         base-url))))
 
-(defn- cors-allowed-origins []
-  (let [configured (some-> (System/getenv "CORS_ALLOWED_ORIGINS")
-                           (str/split #",")
-                           (->> (map str/trim) (remove str/blank?)))
-        defaults [#"https?://localhost(:\d+)?"
-                  #"https?://(?:[^./]+\.)*amicharskilabs\.com"
-                  (re-pattern (java.util.regex.Pattern/quote (frontend-origin)))]]
-    (->> (concat defaults
-                 (map #(re-pattern (java.util.regex.Pattern/quote %)) configured))
-         vec)))
-
 (defn- env-true? [v]
   (contains? #{"true" "1" "yes" "on"}
              (some-> v str str/trim str/lower-case)))
@@ -132,11 +120,7 @@
       (wrap-session {:store (memory-store)
                      :cookie-name "iam-session"
                      :cookie-attrs (session-cookie-attrs)})
-      log-request
-      (wrap-cors :access-control-allow-origin (cors-allowed-origins)
-                 :access-control-allow-methods [:get :put :post :delete :options]
-                 :access-control-allow-headers ["Content-Type" "Authorization" "Cookie"]
-                 :access-control-allow-credentials "true")))
+      log-request))
 
 (defrecord HttpServerComponent [config] component/Lifecycle
 
