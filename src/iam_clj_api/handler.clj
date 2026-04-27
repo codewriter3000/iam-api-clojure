@@ -123,8 +123,8 @@
               user-view/user-view-routes
               permission-view/permission-view-routes
               role-view/role-view-routes
-              oauth-admin-view/oauth-admin-view-routes)
-            oauth-view/oauth-view-routes)
+              oauth-admin-view/oauth-admin-view-routes
+              oauth-view/oauth-view-routes))
            (wrap-json-response)))
       ;; Middleware
       (wrap-resource "public") ; Serve all static files from "resources/public"

@@ -159,7 +159,7 @@
                    :first-name (:first_name user)
                    :last-name (:last_name user)
                    :permissions (:permissions user)}
-         :headers {"Location" (str "/oauth/authorize?" query-string)}})
+         :headers {"Location" (str "/api/oauth/authorize?" query-string)}})
               login-response)))
 
 (defn oauth-login-context [request]
