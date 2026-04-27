@@ -73,38 +73,18 @@
       (catch Exception _
         base-url))))
 
-(defn- cors-origin-to-pattern [origin]
-  "Convert an origin string to a regex pattern.
-   If origin ends with .amicharskilabs.com, match any subdomain.
-   Otherwise, match the exact origin."
-  (if (str/ends-with? origin ".amicharskilabs.com")
-    (let [domain (str/replace origin #"^https?://" "")]
-      (re-pattern (str ".*\\." (java.util.regex.Pattern/quote domain))))
-    (re-pattern (java.util.regex.Pattern/quote origin))))
-
-(defn- get-cors-origin-patterns []
-  (let [configured (some-> (System/getenv "CORS_ALLOWED_ORIGINS")
-                           (str/split #","))
-        defaults ["http://localhost:3000"
-                  "https://localhost:3000"
-                  (frontend-origin)]]
-    (->> (concat configured defaults)
-         (map str)
-         (map str/trim)
-         (remove str/blank?)
-         distinct
-         (map cors-origin-to-pattern)
-         vec)))
-
-(defn- cors-origin-matcher [patterns]
-  "Returns a function that matches request origin against allowed patterns.
-   If matched, returns the origin; otherwise returns nil."
-  (fn [origin]
-    (when (some #(re-matches % origin) patterns)
-      origin)))
-
 (defn- cors-allowed-origins []
-  (cors-origin-matcher (get-cors-origin-patterns)))
+  (let [configured (some-> (System/getenv "CORS_ALLOWED_ORIGINS")
+                           (str/split #",")
+                           (->> (map str/trim) (remove str/blank?)))
+        defaults [#"https?://localhost(:\d+)?"
+                  "http://localhost:3000"
+                  "https://localhost:3000"
+                  #"https?://[^./]+\.amicharskilabs\.com"
+                  (re-pattern (java.util.regex.Pattern/quote (frontend-origin)))]]
+    (->> (concat defaults
+                 (map #(re-pattern (java.util.regex.Pattern/quote %)) configured))
+         vec)))
 
 (defn- env-true? [v]
   (contains? #{"true" "1" "yes" "on"}
