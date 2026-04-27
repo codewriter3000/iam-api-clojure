@@ -73,6 +73,15 @@
       (catch Exception _
         base-url))))
 
+(defn- cors-origin-to-pattern [origin]
+  "Convert an origin string to a regex pattern.
+   If origin ends with .amicharskilabs.com, match any subdomain.
+   Otherwise, match the exact origin."
+  (if (str/ends-with? origin ".amicharskilabs.com")
+    (let [domain (str/replace origin #"^https?://" "")]
+      (re-pattern (str ".*\\." (java.util.regex.Pattern/quote domain))))
+    (re-pattern (java.util.regex.Pattern/quote origin))))
+
 (defn- cors-allowed-origins []
   (let [configured (some-> (System/getenv "CORS_ALLOWED_ORIGINS")
                            (str/split #","))
@@ -84,7 +93,7 @@
          (map str/trim)
          (remove str/blank?)
          distinct
-         (map #(re-pattern (java.util.regex.Pattern/quote %)))
+         (map cors-origin-to-pattern)
          vec)))
 
 (defn- env-true? [v]
