@@ -82,7 +82,7 @@
       (re-pattern (str ".*\\." (java.util.regex.Pattern/quote domain))))
     (re-pattern (java.util.regex.Pattern/quote origin))))
 
-(defn- cors-allowed-origins []
+(defn- get-cors-origin-patterns []
   (let [configured (some-> (System/getenv "CORS_ALLOWED_ORIGINS")
                            (str/split #","))
         defaults ["http://localhost:3000"
@@ -95,6 +95,16 @@
          distinct
          (map cors-origin-to-pattern)
          vec)))
+
+(defn- cors-origin-matcher [patterns]
+  "Returns a function that matches request origin against allowed patterns.
+   If matched, returns the origin; otherwise returns nil."
+  (fn [origin]
+    (when (some #(re-matches % origin) patterns)
+      origin)))
+
+(defn- cors-allowed-origins []
+  (cors-origin-matcher (get-cors-origin-patterns)))
 
 (defn- env-true? [v]
   (contains? #{"true" "1" "yes" "on"}
