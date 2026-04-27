@@ -78,9 +78,7 @@
                            (str/split #",")
                            (->> (map str/trim) (remove str/blank?)))
         defaults [#"https?://localhost(:\d+)?"
-                  "http://localhost:3000"
-                  "https://localhost:3000"
-                  #"https?://[^./]+\.amicharskilabs\.com"
+                  #"https?://(?:[^./]+\.)*amicharskilabs\.com"
                   (re-pattern (java.util.regex.Pattern/quote (frontend-origin)))]]
     (->> (concat defaults
                  (map #(re-pattern (java.util.regex.Pattern/quote %)) configured))
